@@ -1,0 +1,187 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: auto;
+    padding: 20px;
+}
+
+.game-container {
+    position: relative;
+    width: 800px;
+    max-width: 100%;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 20px;
+    border-radius: 15px;
+}
+
+.header {
+    margin-bottom: 20px;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    letter-spacing: 2px;
+}
+
+.score-board {
+    display: flex;
+    justify-content: space-between;
+    width: 300px;
+    margin: 0 auto 20px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: white;
+}
+
+#player-score, #computer-score {
+    color: #ffcc00;
+}
+
+#game-canvas {
+    background: #0a0e17;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    display: block;
+    margin: 0 auto 25px;
+    width: 100%;
+    max-width: 800px;
+}
+
+.center-line {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 4px;
+    height: 100%;
+    background: repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent 15px,
+        rgba(255, 255, 255, 0.3) 15px,
+        rgba(255, 255, 255, 0.3) 30px
+    );
+    transform: translateX(-50%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.game-over {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 2.5rem;
+    font-weight: bold;
+    z-index: 10;
+    display: none;
+}
+
+.restart-btn {
+    margin-top: 20px;
+    padding: 12px 30px;
+    font-size: 1.2rem;
+    background: #ffcc00;
+    color: #0a0e17;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+.restart-btn:hover {
+    background: #ffd740;
+    transform: scale(1.05);
+}
+
+.win-message {
+    color: #4caf50;
+    margin-bottom: 20px;
+}
+
+.lose-message {
+    color: #f44336;
+    margin-bottom: 20px;
+}
+
+/* DIFFICULTY CONTROLS - NOW GUARANTEED VISIBLE */
+.difficulty-section {
+    background: rgba(0, 0, 0, 0.4);
+    padding: 20px;
+    border-radius: 12px;
+    margin-top: 15px;
+    color: white;
+}
+
+.difficulty-label {
+    font-size: 1.3rem;
+    margin-bottom: 15px;
+    color: #ffcc00;
+    font-weight: bold;
+}
+
+.difficulty-controls {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.difficulty-btn {
+    padding: 10px 20px;
+    background: rgba(255, 204, 0, 0.2);
+    color: white;
+    border: 2px solid #ffcc00;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1.1rem;
+    min-width: 80px;
+    transition: all 0.2s;
+}
+
+.difficulty-btn:hover {
+    background: rgba(255, 204, 0, 0.4);
+}
+
+.difficulty-btn.active {
+    background: #ffcc00;
+    color: #0a0e17;
+    transform: scale(1.05);
+}
+
+.instructions {
+    margin-top: 15px;
+    color: #ddd;
+    font-size: 1.1rem;
+    line-height: 1.5;
+}
+
+.highlight {
+    color: #ffcc00;
+    font-weight: bold;
+}
