@@ -8,6 +8,13 @@ const resultMessage = document.getElementById('result-message');
 const restartBtn = document.getElementById('restart-btn');
 const difficultyButtons = document.querySelectorAll('.difficulty-btn');
 
+// Quiz modal elements
+const quizModal = document.getElementById('quiz-modal');
+const quizQuestionElem = document.getElementById('quiz-question');
+const quizAnswerElem = document.getElementById('quiz-answer');
+const quizSubmitBtn = document.getElementById('quiz-submit');
+const quizFeedbackElem = document.getElementById('quiz-feedback');
+
 // Game settings
 const PADDLE_WIDTH = 15;
 const PADDLE_HEIGHT = 100;
@@ -81,7 +88,8 @@ const ball = {
     size: BALL_SIZE,
     dx: 5,
     dy: 5,
-    speed: 5
+    speed: 5,
+    special: false // Is the ball currently special?
 };
 
 // Key state tracking
@@ -134,6 +142,55 @@ restartBtn.addEventListener('click', () => {
     gameOverScreen.style.display = 'none';
 });
 
+// Quiz questions (simple)
+const quizQuestions = [
+    { q: "What is 5 + 7?", a: "12" },
+    { q: "What color is the sun?", a: "yellow" },
+    { q: "What is the capital of France?", a: "paris" },
+    { q: "What is 9 x 3?", a: "27" },
+    { q: "What is the first letter of 'JavaScript'?", a: "j" }
+];
+
+// Show quiz modal (custom)
+function showQuiz(onSuccess, onFail) {
+    const quiz = quizQuestions[Math.floor(Math.random() * quizQuestions.length)];
+    quizModal.classList.add('active');
+    quizQuestionElem.textContent = quiz.q;
+    quizAnswerElem.value = '';
+    quizFeedbackElem.textContent = '';
+    quizAnswerElem.focus();
+
+    function cleanup() {
+        quizModal.classList.remove('active');
+        quizSubmitBtn.removeEventListener('click', handleSubmit);
+        quizAnswerElem.removeEventListener('keydown', handleKeyDown);
+    }
+
+    function handleSubmit() {
+        const answer = quizAnswerElem.value.trim().toLowerCase();
+        if (answer === quiz.a) {
+            quizFeedbackElem.textContent = 'Correct!';
+            setTimeout(() => {
+                cleanup();
+                onSuccess();
+            }, 600);
+        } else {
+            quizFeedbackElem.textContent = 'Incorrect.';
+            setTimeout(() => {
+                cleanup();
+                if (onFail) onFail();
+            }, 600);
+        }
+    }
+    function handleKeyDown(e) {
+        if (e.key === 'Enter') {
+            handleSubmit();
+        }
+    }
+    quizSubmitBtn.addEventListener('click', handleSubmit);
+    quizAnswerElem.addEventListener('keydown', handleKeyDown);
+}
+
 // Reset ball to center
 function resetBall() {
     ball.x = canvas.width / 2;
@@ -142,6 +199,9 @@ function resetBall() {
     // Random direction
     ball.dx = (Math.random() > 0.5 ? 1 : -1) * ball.speed;
     ball.dy = (Math.random() * 2 - 1) * ball.speed;
+
+    // Randomly make ball special (10% chance)
+    ball.special = Math.random() < 0.5;
 
     // Reset frame counter for computer AI
     framesSinceLastMove = 0;
@@ -227,6 +287,29 @@ function update() {
         ball.y < playerPaddle.y + playerPaddle.height &&
         ball.dx < 0
     ) {
+        // If ball is special, trigger quiz
+        if (ball.special) {
+            gameRunning = false;
+            showQuiz(
+                () => {
+                    // Success: power up
+                    if (Math.random() < 0.5) {
+                        // Make player paddle bigger
+                        playerPaddle.height = Math.min(playerPaddle.height + 40, canvas.height * 0.8);
+                    } else {
+                        // Make computer paddle smaller
+                        computerPaddle.height = Math.max(computerPaddle.height - 40, 40);
+                    }
+                    ball.special = false;
+                    gameRunning = true;
+                },
+                () => {
+                    // Fail: just continue
+                    ball.special = false;
+                    gameRunning = true;
+                }
+            );
+        }
         // Calculate bounce angle based on where ball hits paddle
         const hitPoint = (ball.y - (playerPaddle.y + playerPaddle.height / 2)) / (playerPaddle.height / 2);
         const angle = hitPoint * (Math.PI / 4); // Max 45 degrees
@@ -257,6 +340,10 @@ function update() {
         computerScoreElem.textContent = computerScore;
         resetBall();
 
+        // Reset paddle sizes
+        playerPaddle.height = PADDLE_HEIGHT;
+        computerPaddle.height = PADDLE_HEIGHT;
+
         if (computerScore >= WINNING_SCORE) {
             endGame(false);
         }
@@ -267,6 +354,10 @@ function update() {
         playerScore++;
         playerScoreElem.textContent = playerScore;
         resetBall();
+
+        // Reset paddle sizes
+        playerPaddle.height = PADDLE_HEIGHT;
+        computerPaddle.height = PADDLE_HEIGHT;
 
         if (playerScore >= WINNING_SCORE) {
             endGame(true);
@@ -286,10 +377,18 @@ function draw() {
     ctx.fillRect(computerPaddle.x, computerPaddle.y, computerPaddle.width, computerPaddle.height);
 
     // Draw ball
-    ctx.fillStyle = '#ffffff';
+    if (ball.special) {
+        ctx.save();
+        ctx.shadowColor = '#00eaff';
+        ctx.shadowBlur = 20;
+        ctx.fillStyle = '#00eaff';
+    } else {
+        ctx.fillStyle = '#ffffff';
+    }
     ctx.beginPath();
     ctx.arc(ball.x, ball.y, ball.size, 0, Math.PI * 2);
     ctx.fill();
+    if (ball.special) ctx.restore();
 
     // Draw center line (dashed)
     ctx.setLineDash([10, 15]);

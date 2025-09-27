@@ -22,7 +22,8 @@ let gameState = {
     score: 0,
     lives: 3,
     gameOver: false,
-    gameStarted: false
+    gameStarted: false,
+    shield: false // Player shield power-up
 };
 
 // Game objects
@@ -33,6 +34,9 @@ let player = {
     height: PLAYER_HEIGHT,
     speed: PLAYER_SPEED
 };
+
+// Special ball (power-up)
+let specialBall = null;
 
 let enemies = [];
 let playerBullets = [];
@@ -53,6 +57,57 @@ const gameOverScreen = document.getElementById('game-over-screen');
 const uiOverlay = document.getElementById('ui-overlay');
 const startButton = document.getElementById('start-button');
 const restartButton = document.getElementById('restart-button');
+
+// Quiz modal elements
+const quizModal = document.getElementById('quiz-modal');
+const quizQuestionElem = document.getElementById('quiz-question');
+const quizAnswerElem = document.getElementById('quiz-answer');
+const quizSubmitBtn = document.getElementById('quiz-submit');
+const quizFeedbackElem = document.getElementById('quiz-feedback');
+// Quiz questions
+const quizQuestions = [
+    { q: "What planet is known as the Red Planet?", a: "mars" },
+    { q: "What is 6 x 7?", a: "42" },
+    { q: "What is the capital of Japan?", a: "tokyo" },
+    { q: "What color are most leaves?", a: "green" },
+    { q: "What is the first letter of 'Space'?", a: "s" }
+];
+
+function showQuiz(onSuccess, onFail) {
+    const quiz = quizQuestions[Math.floor(Math.random() * quizQuestions.length)];
+    quizModal.classList.add('active');
+    quizQuestionElem.textContent = quiz.q;
+    quizAnswerElem.value = '';
+    quizFeedbackElem.textContent = '';
+    quizAnswerElem.focus();
+
+    function cleanup() {
+        quizModal.classList.remove('active');
+        quizSubmitBtn.removeEventListener('click', handleSubmit);
+        quizAnswerElem.removeEventListener('keydown', handleKeyDown);
+    }
+    function handleSubmit() {
+        const answer = quizAnswerElem.value.trim().toLowerCase();
+        if (answer === quiz.a) {
+            quizFeedbackElem.textContent = 'Correct!';
+            setTimeout(() => {
+                cleanup();
+                onSuccess();
+            }, 600);
+        } else {
+            quizFeedbackElem.textContent = 'Incorrect.';
+            setTimeout(() => {
+                cleanup();
+                if (onFail) onFail();
+            }, 600);
+        }
+    }
+    function handleKeyDown(e) {
+        if (e.key === 'Enter') handleSubmit();
+    }
+    quizSubmitBtn.addEventListener('click', handleSubmit);
+    quizAnswerElem.addEventListener('keydown', handleKeyDown);
+}
 
 // Initialize stars for background
 function initStars() {
@@ -90,6 +145,7 @@ function createEnemies() {
 
 // Draw player ship
 function drawPlayer() {
+    ctx.save();
     ctx.fillStyle = '#4fc3f7';
     ctx.beginPath();
     ctx.moveTo(player.x + player.width / 2, player.y);
@@ -103,6 +159,28 @@ function drawPlayer() {
     ctx.beginPath();
     ctx.arc(player.x + player.width / 2, player.y + player.height + 5, 8, 0, Math.PI);
     ctx.fill();
+
+    // Draw shield if active
+    if (gameState.shield) {
+        ctx.strokeStyle = '#00eaff';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(player.x + player.width / 2, player.y + player.height / 2, player.width * 0.7, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+    ctx.restore();
+}
+// Draw special ball
+function drawSpecialBall() {
+    if (!specialBall) return;
+    ctx.save();
+    ctx.shadowColor = '#00eaff';
+    ctx.shadowBlur = 20;
+    ctx.fillStyle = '#00eaff';
+    ctx.beginPath();
+    ctx.arc(specialBall.x, specialBall.y, specialBall.size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
 }
 
 // Draw enemies
@@ -265,6 +343,14 @@ function moveBullets() {
             enemyBullets.splice(i, 1);
         }
     }
+
+    // Move special ball down
+    if (specialBall) {
+        specialBall.y += specialBall.speed;
+        if (specialBall.y - specialBall.size > CANVAS_HEIGHT) {
+            specialBall = null;
+        }
+    }
 }
 
 // Check collisions
@@ -299,13 +385,42 @@ function checkCollisions() {
             bullet.y + bullet.height > player.y) {
             // Player hit
             enemyBullets.splice(i, 1);
-            gameState.lives--;
-            livesElement.textContent = gameState.lives;
-
-            if (gameState.lives <= 0) {
-                gameState.gameOver = true;
+            if (gameState.shield) {
+                // Shield absorbs hit
+                gameState.shield = false;
+            } else {
+                gameState.lives--;
+                livesElement.textContent = gameState.lives;
+                if (gameState.lives <= 0) {
+                    gameState.gameOver = true;
+                }
             }
             break;
+        }
+    }
+
+    // Special ball vs player
+    if (specialBall) {
+        if (
+            specialBall.x > player.x &&
+            specialBall.x < player.x + player.width &&
+            specialBall.y + specialBall.size > player.y &&
+            specialBall.y - specialBall.size < player.y + player.height
+        ) {
+            // Pause game and show quiz
+            let prevGameStarted = gameState.gameStarted;
+            gameState.gameStarted = false;
+            showQuiz(
+                () => {
+                    gameState.shield = true;
+                    specialBall = null;
+                    gameState.gameStarted = prevGameStarted;
+                },
+                () => {
+                    specialBall = null;
+                    gameState.gameStarted = prevGameStarted;
+                }
+            );
         }
     }
 
@@ -335,6 +450,16 @@ function update(timestamp) {
     moveBullets();
     enemyShoot();
     checkCollisions();
+
+    // Spawn special ball occasionally (every ~15 seconds)
+    if (!specialBall && Math.random() < 0.002) {
+        specialBall = {
+            x: Math.random() * (CANVAS_WIDTH - 30) + 15,
+            y: -20,
+            size: 16,
+            speed: 4.5
+        };
+    }
 }
 
 // Draw everything
@@ -349,6 +474,7 @@ function draw() {
     drawPlayer();
     drawEnemies();
     drawBullets();
+    drawSpecialBall();
 }
 
 // Game loop
@@ -373,7 +499,8 @@ function initGame() {
         score: 0,
         lives: 3,
         gameOver: false,
-        gameStarted: true
+        gameStarted: true,
+        shield: false
     };
 
     player = {
@@ -389,6 +516,7 @@ function initGame() {
     keys = {};
     enemyDirection = 1;
     lastEnemyMove = 0;
+    specialBall = null;
 
     scoreElement.textContent = '0';
     livesElement.textContent = '3';
