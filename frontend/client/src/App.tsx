@@ -8,6 +8,7 @@ import LoginPage from "@/pages/LoginPage";
 import SignupPage from "@/pages/SignupPage";
 import QuizzPage from "@/pages/QuizzPage";
 import Dashboard from "@/pages/DashboardPage";
+import RequireAuth from "@/components/RequireAuth";
 import GamesPage from "@/pages/GamesPage";
 import ParentsPage from "@/pages/ParentsPage";
 import { Component } from "lucide-react";
@@ -22,7 +23,11 @@ function Router() {
           <Route path="/login" component={LoginPage} />
           <Route path="/signup" component={SignupPage} />
           <Route path="/aboutus" component={AboutUsPage}/>
-          <Route path="/dashboard" component={Dashboard}/>
+          <Route path="/dashboard" component={() => (
+            <RequireAuth>
+              <Dashboard />
+            </RequireAuth>
+          )}/>
           <Route path="/games" component={GamesPage}/>
           <Route path="/parents" component={ParentsPage}/>
 
