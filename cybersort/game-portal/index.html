@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Portal - Login</title>
+    <link rel="stylesheet" href="css/   styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Login Page -->
+        <div id="loginPage">
+            <div class="login-container">
+                <div class="logo">
+                    <h1>Game Portal</h1>
+                    <p>Login to access your games</p>
+                </div>
+                
+                <form class="login-form" id="loginForm">
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" placeholder="Enter your email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" placeholder="Enter your password" required>
+                    </div>
+                    
+                    <div class="remember-forgot">
+                        <div class="remember-me">
+                            <input type="checkbox" id="remember">
+                            <label for="remember">Remember me</label>
+                        </div>
+                        <a href="#" class="forgot-password">Forgot password?</a>
+                    </div>
+                    
+                    <div class="error-message" id="errorMessage">
+                        Invalid email or password. Please try again.
+                    </div>
+                    
+                    <div class="success-message" id="successMessage">
+                        Login successful! Redirecting to dashboard...
+                    </div>
+                    
+                    <button type="submit" class="login-button">Login</button>
+                </form>
+                
+                <p style="margin-top: 20px; font-size: 14px; color: #c2c2c2;">
+                    Demo credentials: user@example.com / password123
+                </p>
+            </div>
+        </div>
+        
+        <!-- Dashboard Page -->
+        <div id="dashboardPage">
+            <div class="dashboard-header">
+                <div class="user-info">
+                    <div class="user-avatar">U</div>
+                    <div>
+                        <h2>Welcome, User!</h2>
+                        <p>Select a game to play or add a new one</p>
+                    </div>
+                </div>
+                <button class="logout-btn" id="logoutBtn">Logout</button>
+            </div>
+            
+            <div class="games-grid" id="gamesGrid">
+                <!-- Game cards will be added here dynamically -->
+            </div>
+            
+            <div class="add-game-section">
+                <h3 style="margin-bottom: 15px;">Add New Game</h3>
+                <form class="add-game-form" id="addGameForm">
+                    <div class="form-row">
+                        <input type="text" id="gameTitle" placeholder="Game Title" required>
+                        <input type="text" id="gameIcon" placeholder="Icon (e.g., 🎮)" required>
+                    </div>
+                    <div class="form-row">
+                        <input type="text" id="gameDescription" placeholder="Game Description" required>
+                        <input type="text" id="gameUrl" placeholder="Game URL (optional)">
+                    </div>
+                    <button type="submit" class="add-game-btn">Add Game</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Game Page -->
+        <div id="gamePage">
+            <div class="game-header">
+                <h2 id="gamePageTitle">Game Title</h2>
+                <button class="back-to-dashboard" id="backToDashboard">Back to Dashboard</button>
+            </div>
+            
+            <div class="game-container" id="gameContainer">
+                <!-- Game content will be loaded here -->
+                <div style="text-align: center; padding: 40px;">
+                    <i class="fas fa-gamepad" style="font-size: 60px; color: var(--accent); margin-bottom: 20px;"></i>
+                    <h3>Game Loading...</h3>
+                    <p>This is where your game would be embedded or loaded.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
