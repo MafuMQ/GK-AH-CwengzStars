@@ -25,21 +25,21 @@ const WINNING_SCORE = 5;
 // COMPLETELY REBALANCED DIFFICULTY SETTINGS
 const DIFFICULTY_SETTINGS = {
     1: { // Easy - Beatabe with basic skill
-        reactionDelay: 15,
+        reactionDelay: 4,
         maxSpeed: 4.2,
         errorMargin: 35,
         prediction: 0.4,
         consistency: 0.7
     },
     2: { // Medium - Challenging but fair
-        reactionDelay: 8,
+        reactionDelay: 3,
         maxSpeed: 5.5,
         errorMargin: 18,
         prediction: 0.7,
         consistency: 0.85
     },
     3: { // Hard - Requires good reflexes
-        reactionDelay: 4,
+        reactionDelay: 2,
         maxSpeed: 6.8,
         errorMargin: 8,
         prediction: 0.85,
