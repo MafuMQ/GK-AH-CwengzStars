@@ -10,7 +10,6 @@ import QuizzPage from "@/pages/QuizzPage";
 import Dashboard from "@/pages/DashboardPage";
 import GamesPage from "@/pages/GamesPage";
 import ParentsPage from "@/pages/ParentsPage";
-import GameDetailPage from "@/pages/GameDetailPage";
 import { Component } from "lucide-react";
 
 function Router() {
@@ -26,7 +25,6 @@ function Router() {
           <Route path="/dashboard" component={Dashboard}/>
           <Route path="/games" component={GamesPage}/>
           <Route path="/parents" component={ParentsPage}/>
-          <Route path="/gamesdetails" component={GameDetailPage}/>
 
           <Route component={NotFound} />
         </Switch>
