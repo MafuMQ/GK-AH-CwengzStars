@@ -1,6 +1,5 @@
 import React from "react";
 
-
 const HeroSection: React.FC = () => {
   return (
     <section className="relative overflow-hidden animated-gradient py-44">
@@ -13,12 +12,12 @@ const HeroSection: React.FC = () => {
             Embark on interactive quests that teach kids to navigate the digital world safely, responsibly, and confidently.
           </p>
           <div className="flex gap-5">
-            <button className="bg-transparent border-2 border-white text-white font-bold px-4 py-2 rounded-full hover:bg-white hover:text-primary transition-all hover:-translate-y-1 duration-300 text-lg">
+            <a href="/quizz" className="bg-transparent border-2 border-white text-white font-bold px-4 py-2 rounded-full hover:bg-white hover:text-primary transition-all hover:-translate-y-1 duration-300 text-lg">
               Try for Free
-            </button>
-            <button className="bg-transparent border-2 border-white text-white font-bold px-4 py-2 rounded-full hover:bg-white hover:text-primary transition-all hover:-translate-y-1 duration-300 text-lg">
+            </a>
+            <a href="/login" className="bg-transparent border-2 border-white text-white font-bold px-4 py-2 rounded-full hover:bg-white hover:text-primary transition-all hover:-translate-y-1 duration-300 text-lg">
               See Demo
-            </button>
+            </a>
 
           </div>
         </div>

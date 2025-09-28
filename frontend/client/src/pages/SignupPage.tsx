@@ -44,7 +44,7 @@ function SignupPage() {
 
              <p className="text-center p-2 text-gray-700 mb-4">
                     Welcome Please enter your credentials to create your account. If you do have an account, you can 
-                    <a href="/login" className="text-white hover:underline"> log in here</a>.
+                    <a href="/login" className="text-blue-800 hover:underline"> log in here</a>.
               </p>
 
       <form onSubmit={handleSubmit} className='py-1'>
@@ -65,7 +65,7 @@ function SignupPage() {
           <button type="button" onClick={handleGoogleSignup} className="w-[100%] bg-white text-gray-700 font-semibold py-2 px-4 rounded-md hover:bg-gray-100 transition duration-200 flex items-center justify-center border"> <FcGoogle className="w-6 h-6" /><span className="ml-2">Sign Up with Google</span>
           </button>                    
       </div>
-            <p className="text-gray-700 mt-2 text-sm text-center py-5">Already have an account? <a href="/login" className="text-white hover:underline">Login</a></p>
+            <p className="text-gray-700 mt-2 text-sm text-center py-5">Already have an account? <a href="/login" className="text-blue-800 hover:underline">Login</a></p>
                 
         </div>
     </section>

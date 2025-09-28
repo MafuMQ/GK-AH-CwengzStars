@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Helmet } from "react-helmet";
 import { CharacterAvatars } from "@/assets/svg/characters";
@@ -15,6 +15,61 @@ import { Loader2, Star, Calendar, Award, BookOpen, Zap, ChevronRight, Clock } fr
 import HeaderDashboard from "@/components/HeaderDashboard";
 
 const DashboardPage = () => {
+  // Notifications center state
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState([
+    {
+      id: 1,
+      type: "badge",
+      message: "You earned a new badge: Cyber Safety Star!",
+      read: false,
+      time: "2m ago"
+    },
+    {
+      id: 2,
+      type: "streak",
+      message: "You're on a 7-day learning streak!",
+      read: false,
+      time: "10m ago"
+    },
+    {
+      id: 3,
+      type: "game",
+      message: "Try Phishing Detective in your recommended games.",
+      read: false,
+      time: "1h ago"
+    }
+  ]);
+
+  const handleMarkRead = (id: number) => {
+    setNotifications(notifications.map(n => n.id === id ? { ...n, read: true } : n));
+  };
+  const handleDismiss = (id: number) => {
+    setNotifications(notifications.filter(n => n.id !== id));
+  };
+  // Toast notification state
+  const [showBadgeToast, setShowBadgeToast] = useState(true);
+  const [showStreakToast, setShowStreakToast] = useState(true);
+  const [showGameToast, setShowGameToast] = useState(true);
+
+  // Check if any toast is visible
+  const anyToastVisible = showBadgeToast || showStreakToast || showGameToast;
+
+  useEffect(() => {
+    const badgeTimer = setTimeout(() => setShowBadgeToast(false), 3500);
+    const streakTimer = setTimeout(() => setShowStreakToast(false), 5000);
+    const gameTimer = setTimeout(() => setShowGameToast(false), 6500);
+    return () => {
+      clearTimeout(badgeTimer);
+      clearTimeout(streakTimer);
+      clearTimeout(gameTimer);
+    };
+  }, []);
+  // Placeholder user data (replace with real user data if available)
+  const user = {
+    name: "Alex",
+    avatar: "https://ui-avatars.com/api/?name=Alex&background=0D8ABC&color=fff"
+  };
   const [celebrateRef, setCelebrateRef] = useState<HTMLDivElement | null>(null);
   
   const { data: progress, isLoading: progressLoading } = useQuery({
@@ -56,20 +111,54 @@ const DashboardPage = () => {
         />
       </Helmet>
 
+      {/* Centered Popup Toast Notifications with blurred background */}
+      {anyToastVisible && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/10 backdrop-blur-sm z-[101] transition-all"></div>
+          <div className="relative z-[102] flex flex-col gap-4 items-center">
+            {showBadgeToast && (
+              <div className="animate-fade-in-up bg-yellow-100 border-l-4 border-yellow-500 p-6 rounded-2xl shadow-2xl flex items-center gap-2 min-w-[320px] text-lg font-medium">
+                <Award className="w-6 h-6 text-yellow-500" />
+                <span className="font-semibold">Congrats!</span>
+                <span>You earned a new badge: <span className="font-bold">Cyber Safety Star</span></span>
+              </div>
+            )}
+            {showStreakToast && (
+              <div className="animate-fade-in-up bg-purple-100 border-l-4 border-purple-500 p-6 rounded-2xl shadow-2xl flex items-center gap-2 min-w-[320px] text-lg font-medium">
+                <Star className="w-6 h-6 text-purple-500" />
+                <span className="font-semibold">Streak!</span>
+                <span>You're on a <span className="font-bold">7-day learning streak</span>!</span>
+              </div>
+            )}
+            {showGameToast && (
+              <div className="animate-fade-in-up bg-blue-100 border-l-4 border-blue-500 p-6 rounded-2xl shadow-2xl flex items-center gap-2 min-w-[320px] text-lg font-medium">
+                <BookOpen className="w-6 h-6 text-blue-500" />
+                <span className="font-semibold">New Game!</span>
+                <span>Try <span className="font-bold">Phishing Detective</span> in your recommended games.</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <HeaderDashboard/>
 
       <div className="overflow-hidden pt-24 pb-16 bg-gradient-to-br from-pink-50 via-blue-50 to-purple-50 relative">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between">
             <div>
-              <h1 className="font-fredoka text-4xl md:text-5xl text-center md:text-left mb-4">
-                <span className="bg-gradient-to-r from-primary via-purple-500 to-yellow-500 bg-clip-text text-transparent">
-                  Welcome Back, Cyber Explorer!
-                </span>
-              </h1>
-              <p className="text-gray-700 text-lg text-center md:text-left mb-4">
-                Continue your learning adventure and collect more rewards!
-              </p>
+              {/* Personalized Greeting */}
+              <div className="flex items-center gap-4 mb-4">
+                <img src={user.avatar} alt="User Avatar" className="w-16 h-16 rounded-full border-4 border-primary shadow" />
+                <div>
+                  <h1 className="font-fredoka text-4xl md:text-5xl text-center md:text-left mb-1">
+                    <span className="bg-gradient-to-r from-primary via-purple-500 to-yellow-500 bg-clip-text text-transparent">
+                      Welcome back, {user.name}!
+                    </span>
+                  </h1>
+                  <p className="text-gray-800 text-lg text-center md:text-left">Continue your learning adventure and collect more rewards!</p>
+                </div>
+              </div>
               {!isLoading && (
                 <div className="flex items-center gap-2">
                   <div className="px-3 py-1 bg-yellow-100 rounded-full text-yellow-600 font-bold text-sm">
@@ -95,9 +184,62 @@ const DashboardPage = () => {
                 Celebrate! 🎉
               </Button>
             </div>
-          </div>
+            
+            {/* Notifications Bell Icon in Header */}
+        <div className="fixed top-20 right-10 z-50">
+            <button
+            aria-label="Show notifications"
+            className="relative p-2 rounded-full bg-white shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary"
+            onClick={() => setShowNotifications(v => !v)}
+            >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            {notifications.some(n => !n.read) && (
+                <span className="absolute top-1 right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
+            )}
+            </button>
         </div>
-        <div className="absolute bottom-[3rem] left-[390px] w-[400px] h-[400px] bg-primary opacity-60 rounded-full"></div>
+
+        {/* Notifications Panel */}
+        {showNotifications && (
+        <div className="fixed top-16 right-8 z-50 w-80 max-w-full bg-white rounded-2xl shadow-2xl border border-gray-200 p-4 animate-fade-in-up" role="dialog" aria-modal="true" aria-label="Notifications Center">
+            <div className="flex items-center justify-between mb-2">
+                <h2 className="text-lg font-bold text-primary">Notifications</h2>
+                <button className="text-gray-400 hover:text-primary" aria-label="Close notifications" onClick={() => setShowNotifications(false)}>
+                ×
+                </button>
+            </div>
+            {notifications.length === 0 ? (
+                <div className="text-gray-500 text-center py-8">No notifications</div>
+            ) : (
+                <ul className="space-y-3">
+                {notifications.map(n => (
+                    <li key={n.id} className={`flex items-start gap-3 p-3 rounded-xl ${n.read ? 'bg-gray-50' : 'bg-blue-50'}`}>
+                    <span className="mt-1">
+                        {n.type === "badge" && <Award className="w-5 h-5 text-yellow-500" />}
+                        {n.type === "streak" && <Star className="w-5 h-5 text-purple-500" />}
+                        {n.type === "game" && <BookOpen className="w-5 h-5 text-blue-500" />}
+                    </span>
+                    <div className="flex-1">
+                        <div className="text-sm font-medium text-gray-800">{n.message}</div>
+                        <div className="text-xs text-gray-400 mt-1">{n.time}</div>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                        {!n.read && (
+                        <button className="text-xs text-primary hover:underline" onClick={() => handleMarkRead(n.id)} aria-label="Mark as read">Mark as read</button>
+                        )}
+                        <button className="text-xs text-gray-400 hover:text-red-500" onClick={() => handleDismiss(n.id)} aria-label="Dismiss notification">Dismiss</button>
+                    </div>
+                    </li>
+                ))}
+                </ul>
+            )}
+            </div>
+        )}
+            </div>
+        </div>
+        <div className="absolute bottom-[3rem] left-[390px] w-[400px] h-[400px] bg-primary opacity-10 rounded-full"></div>
         <div className="absolute top-[-160px] right-[-100px] w-[300px] h-[300px] bg-purple-400 opacity-60 rounded-full"></div>
       
         <div className="absolute top-[5rem] right-[15rem] text-teal-400 text-4xl">✦</div>
@@ -145,7 +287,7 @@ const DashboardPage = () => {
                     <Clock className="w-6 h-6 text-blue-500" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Learning Time</p>
+                    <p className="text-sm text-gray-500">Quest Time</p>
                     <h3 className="text-2xl text-blue-500 font-fredoka">4.5 hours</h3>
                   </div>
                 </div>
@@ -191,12 +333,12 @@ const DashboardPage = () => {
                           <div className="mb-6">
                             <div className="flex justify-between mb-1">
                               <span  className="text-primary">Weekly Points</span>
-                              <span className="font-bold">{progress?.weeklyPoints || 0} / {progress?.weeklyGoal || 1000}</span>
+                              <span className="font-bold">{progress?.weeklyPoints || 0} / {progress?.weeklyGoal || 500}</span>
                             </div>
                             <Progress value={(progress?.weeklyPoints || 0) / (progress?.weeklyGoal || 10) * 100} className="h-4" />
                           </div>
                           
-                          <h4 className="font-bold text-primary mb-3">Learning Streak</h4>
+                          <h4 className="text-primary mb-3">Learning Streak</h4>
                           <div className="flex justify-between mb-6">
                             {['S','M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
                               <div key={index} className="flex flex-col items-center">
@@ -215,7 +357,7 @@ const DashboardPage = () => {
                           </div>
                           
                           <h4 className="font-bold text-primary mb-3">Your Skills</h4>
-                          <div className="space-y-4">
+                          <div className="space-y-4 bg-red-800">
                             {progress?.skills?.map((skill, index) => (
                               <div key={index}>
                                 <div className="flex justify-between mb-1">
@@ -358,20 +500,20 @@ const DashboardPage = () => {
                         <h3 className="font-fredoka text-primary text-2xl mb-4">Recommendations</h3>
                         <ul className="space-y-4">
                           <li className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                            <h4 className="font-bold text-black mb-1">Improve your Reading skills</h4>
-                            <p className="text-gray-600 mb-2">Your reading skills could use more practice.</p>
+                            <h4 className="font-bold text-black mb-1">Improve your Cyber skills</h4>
+                            <p className="text-gray-600 mb-2">Your phishing spoting skills could use more practice.</p>
                             <a href="/games?subject=reading" className="text-primary font-bold flex items-center">
-                              Play Reading Games 
+                              Play Phishing Games 
                               <svg className="w-4 h-4 ml-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                               </svg>
                             </a>
                           </li>
                           <li className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                            <h4 className="font-bold text-black mb-1">Challenge yourself in Science</h4>
-                            <p className="text-gray-600 mb-2">Try some harder science games to level up!</p>
+                            <h4 className="font-bold text-black mb-1">Challenge yourself in Reality River</h4>
+                            <p className="text-gray-600 mb-2">Try some harder phishing games to level up!</p>
                             <a href="/games?subject=science" className="text-primary font-bold flex items-center">
-                              Play Science Games 
+                              Play Cyber Games 
                               <svg className="w-4 h-4 ml-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                               </svg>

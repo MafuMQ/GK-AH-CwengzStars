@@ -1,335 +1,259 @@
-import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
-import { useToast } from "@/hooks/use-toast";
-import GameCard from "@/components/GameCard";
-import { Button } from "@/components/ui/button";
-import { cn, getGradeColor, getSubjectColor } from "@/lib/utils";
-import { Helmet } from "react-helmet";
+import { useState } from "react";
 import { Game } from "@shared/types";
-import { Loader2 } from "lucide-react";
+import { Loader2, Shield, Sword, Grid3X3, Search, Brain, Zap,Eye } from "lucide-react";
 import HeaderDashboard from "@/components/HeaderDashboard";
+import JuniorAgentGame from "@/components/JuniorAgentGame";
+import CyberSafetyQuiz from "@/components/CyberSafetyQuiz";
+import CyberHeroRPG from "@/components/CyberHeroRPG";
+import DataFortressBuilder from "@/components/DataFortressBuilder";
+import CyberRunnerGame from "@/components/CyberRunnerGame";
+import { Button } from "@/components/ui/button";
+import { Helmet } from "react-helmet";
 
+// Digital Footprint Game Modal (inline)
+function DigitalFootprintGameModal({ onClose }: { onClose: () => void }) {
+  const [gamePhase, setGamePhase] = useState<'intro' | 'profile' | 'feed' | 'apps' | 'opportunities' | 'results'>('intro');
+  const [currentYear, setCurrentYear] = useState(1);
+  const [reputation, setReputation] = useState(50);
+  const [digitalFootprint, setDigitalFootprint] = useState<'green' | 'yellow' | 'red'>('green');
+  const [footprintHistory, setFootprintHistory] = useState<string[]>([]);
+  const [selectedPosts, setSelectedPosts] = useState<number[]>([]);
+  const [selectedApps, setSelectedApps] = useState<number[]>([]);
+  const [unlockedOpportunities, setUnlockedOpportunities] = useState<number[]>([]);
+  const [gameLog, setGameLog] = useState<string[]>([]);
 
-// Mock games array — outside the component
-const mockGames: Game[] = [
-  {
-    id: 1,
-    title: "Number Blast",
-    subject: "Academics",
-    description:
-      "Solve addition and subtraction problems by blasting the correct answers!",
-    minGrade: 1,
-    maxGrade: 7,
-    durationMinutes: 10,
-    imageUrl:
-      "https://s3.amazonaws.com/shecodesio-production/uploads/files/000/167/012/original/happy_no.png?1748692462",
-  },
-  {
-    id: 2,
-    title: "Code Wizards",
-    subject: "Technology",
-    description:
-      "Learn basic coding concepts through fun puzzles and magical challenges.",
-    minGrade: 4,
-    maxGrade: 7,
-    durationMinutes: 25,
-    imageUrl:
-      "https://s3.amazonaws.com/shecodesio-production/uploads/files/000/167/009/original/code_wizard.png?1748691628",
-  },
-  {
-    id: 3,
-    title: "Word Heroes",
-    subject: "Communication",
-    description:
-      "Build vocabulary and spelling skills by rescuing words from the villain!",
-    minGrade: 1,
-    maxGrade: 7,
-    durationMinutes: 12,
-    imageUrl:
-      "https://s3.amazonaws.com/shecodesio-production/uploads/files/000/167/010/original/word_hero.png?1748691861",
-  },
-  {
-    id: 4,
-    title: "Happy Painting",
-    subject: "Creativity",
-    description:
-      "Explore colors and shapes while creating beautiful digital art masterpieces.",
-    minGrade: 1,
-    maxGrade: 7,
-    durationMinutes: 15,
-    imageUrl:
-      "https://s3.amazonaws.com/shecodesio-production/uploads/files/000/167/011/original/happy_painting.png?1748692045",
-  },
-];
+  const addToLog = (message: string) => {
+    setGameLog(prev => [...prev, `Year ${currentYear}: ${message}`]);
+  };
+
+  const updateFootprint = (newEntries: string[]) => {
+    const allEntries = [...footprintHistory, ...newEntries];
+    setFootprintHistory(allEntries);
+    
+    const redCount = allEntries.filter(f => f === 'red').length;
+    const yellowCount = allEntries.filter(f => f === 'yellow').length;
+    const greenCount = allEntries.filter(f => f === 'green').length;
+    
+    if (redCount > yellowCount + greenCount) {
+      setDigitalFootprint('red');
+    } else if (yellowCount > greenCount || redCount > 0) {
+      setDigitalFootprint('yellow');
+    } else {
+      setDigitalFootprint('green');
+    }
+  };
+
+  const handlePostSelection = (postId: number) => {
+    const posts = [
+      { id: 1, content: "Just got an A+ on my math test! So proud of myself! 🎉", consequences: { reputation: 15, footprint: 'green' as const } },
+      { id: 2, content: "At the beach with my family! Perfect day! 🏖️ [Photo of family at beach]", consequences: { reputation: 5, footprint: 'yellow' as const } },
+      { id: 3, content: "I hate this teacher! She gave us so much homework! 😡", consequences: { reputation: -20, footprint: 'red' as const } },
+      { id: 4, content: "Check out this funny video I found! https://randomsite.com/funny-video", consequences: { reputation: -10, footprint: 'red' as const } },
+      { id: 5, content: "My phone number is 555-0123 if anyone wants to text me!", consequences: { reputation: -25, footprint: 'red' as const } },
+      { id: 6, content: "Working on a school project about recycling. Anyone have good ideas?", consequences: { reputation: 10, footprint: 'green' as const } }
+    ];
+
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+
+    setSelectedPosts(prev => {
+      const newSelection = prev.includes(postId) ? prev.filter(id => id !== postId) : [...prev, postId];
+      const reputationChange = prev.includes(postId) ? -post.consequences.reputation : post.consequences.reputation;
+      setReputation(current => Math.max(0, Math.min(100, current + reputationChange)));
+      updateFootprint(prev.includes(postId) ? [] : [post.consequences.footprint]);
+      addToLog(prev.includes(postId) ? `Removed post: "${post.content.substring(0, 30)}..."` : `Posted: "${post.content.substring(0, 30)}..."`);
+      return newSelection;
+    });
+  };
+
+  const handleAppSelection = (appId: number) => {
+    const apps = [
+      { id: 1, name: "SafeChat", privacyRisk: 'low' as const, reputationChange: 2 },
+      { id: 2, name: "SocialSnap", privacyRisk: 'high' as const, reputationChange: -8 },
+      { id: 3, name: "StudyBuddy", privacyRisk: 'medium' as const, reputationChange: -4 },
+      { id: 4, name: "GameZone", privacyRisk: 'high' as const, reputationChange: -8 }
+    ];
+
+    const app = apps.find(a => a.id === appId);
+    if (!app) return;
+
+    setSelectedApps(prev => {
+      const newSelection = prev.includes(appId) ? prev.filter(id => id !== appId) : [...prev, appId];
+      const reputationChange = prev.includes(appId) ? -app.reputationChange : app.reputationChange;
+      setReputation(current => Math.max(0, Math.min(100, current + reputationChange)));
+      const footprintColor = app.privacyRisk === 'high' ? 'red' : app.privacyRisk === 'medium' ? 'yellow' : 'green';
+      updateFootprint(prev.includes(appId) ? [] : [footprintColor]);
+      addToLog(prev.includes(appId) ? `Disconnected from ${app.name}` : `Connected ${app.name} app`);
+      return newSelection;
+    });
+  };
+
+  const checkOpportunities = () => {
+    const opportunities = [
+      { id: 1, name: "Student Council President", requirements: { minReputation: 70, maxRisk: 20 } },
+      { id: 2, name: "Summer Internship", requirements: { minReputation: 60, maxRisk: 15 } },
+      { id: 3, name: "Sports Team Captain", requirements: { minReputation: 50, maxRisk: 25 } },
+      { id: 4, name: "Academic Scholarship", requirements: { minReputation: 80, maxRisk: 10 } }
+    ];
+
+    const newlyUnlocked = opportunities.filter(opp => {
+      const alreadyUnlocked = unlockedOpportunities.includes(opp.id);
+      const meetsRequirements = reputation >= opp.requirements.minReputation && footprintHistory.filter(f => f === 'red').length <= opp.requirements.maxRisk;
+      return !alreadyUnlocked && meetsRequirements;
+    });
+
+    if (newlyUnlocked.length > 0) {
+      setUnlockedOpportunities(prev => [...prev, ...newlyUnlocked.map(opp => opp.id)]);
+      newlyUnlocked.forEach(opp => { addToLog(`🎉 Unlocked: ${opp.name}!`); });
+    }
+  };
+
+  const nextPhase = () => {
+    if (gamePhase === 'intro') setGamePhase('profile');
+    else if (gamePhase === 'profile') setGamePhase('feed');
+    else if (gamePhase === 'feed') setGamePhase('apps');
+    else if (gamePhase === 'apps') { setGamePhase('opportunities'); checkOpportunities(); }
+    else if (gamePhase === 'opportunities') {
+      if (currentYear < 3) {
+        setCurrentYear(current => current + 1);
+        setGamePhase('feed');
+        setSelectedPosts([]);
+        setSelectedApps([]);
+      } else {
+        setGamePhase('results');
+      }
+    }
+  };
+
+  const getFootprintColor = () => {
+    switch (digitalFootprint) {
+      case 'green': return 'text-green-600 bg-green-100';
+      case 'yellow': return 'text-yellow-600 bg-yellow-100';
+      case 'red': return 'text-red-600 bg-red-100';
+    }
+  };
+
+  const getReputationColor = () => {
+    if (reputation >= 70) return 'text-green-600';
+    if (reputation >= 40) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/30 backdrop-blur-sm">
+      <div className="relative max-w-4xl w-full mx-auto bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-3xl shadow-2xl p-8 overflow-y-auto max-h-screen">
+        <button className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl font-bold" onClick={onClose}>×</button>
+        <div className="text-center mb-6">
+          <h2 className="text-3xl font-bold text-purple-700 mb-2">Digital Footprint Adventure</h2>
+          <div className="flex justify-center items-center gap-4 mb-4">
+            <span className="text-lg font-semibold">Year {currentYear} of 3</span>
+            <div className={`px-3 py-1 rounded-full font-bold ${getFootprintColor()}`}>Footprint: {digitalFootprint.toUpperCase()}</div>
+            <div className={`text-xl font-bold ${getReputationColor()}`}>Reputation: {reputation}</div>
+          </div>
+        </div>
+        {gamePhase === 'intro' && (
+          <div className="text-center">
+            <h3 className="text-2xl font-bold mb-4">Welcome to Your Digital Journey!</h3>
+            <p className="text-lg mb-6">You're about to embark on a 3-year adventure managing your online presence.</p>
+            <button onClick={nextPhase} className="bg-purple-600 text-white font-bold py-3 px-8 rounded-full hover:bg-purple-700">Start Your Journey</button>
+          </div>
+        )}
+        {gamePhase === 'results' && (
+          <div className="text-center">
+            <h3 className="text-2xl font-bold mb-4">Your Digital Journey Complete!</h3>
+            <div className="bg-white rounded-xl p-6 shadow-lg mb-6">
+              <div className="text-3xl font-bold text-purple-600 mb-2">Final Reputation: {reputation}</div>
+              <div className="text-2xl font-bold text-green-600 mb-4">Digital Footprint: {digitalFootprint.toUpperCase()}</div>
+            </div>
+            <button onClick={onClose} className="bg-purple-600 text-white font-bold py-3 px-8 rounded-full hover:bg-purple-700">Close Game</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 const GamesPage = () => {
-  const [location] = useLocation();
-  const { toast } = useToast();
-
-  const [selectedSubject, setSelectedSubject] = useState<string>("all");
-  const [selectedGrade, setSelectedGrade] = useState<number | null>(null);
-  const [searchTerm, setSearchTerm] = useState<string>("");
-
-  useEffect(() => {
-    const searchParams = new URLSearchParams(location.split("?")[1]);
-    const subject = searchParams.get("subject");
-    const grade = searchParams.get("grade");
-    const character = searchParams.get("character");
-
-    if (subject) setSelectedSubject(subject);
-    if (grade) setSelectedGrade(parseInt(grade));
-
-    if (character) {
-      toast({
-        title: "Character Selected",
-        description: `Showing games featuring your selected character!`,
-        duration: 3000,
-      });
-    }
-  }, [location, toast]);
-
-  // Use mock data instead of fetching from API
-  const games = mockGames;
-  const isLoading = false;
-  const error = null;
-
-  const subjects = ["all", "academics", "technology", "communication", "creativity"];
-  const grades = [
-    { id: null, label: "All" },
-    { id: 0, label: "1" },
-    { id: 1, label: "2" },
-    { id: 2, label: "3" },
-    { id: 3, label: "4" },
-    { id: 4, label: "5" },
-    { id: 5, label: "6" },
-    { id: 6, label: "7" },
-  ];
-
-  const filteredGames = games?.filter((game) => {
-    if (
-      selectedSubject !== "all" &&
-      game.subject.toLowerCase() !== selectedSubject
-    ) {
-      return false;
-    }
-
-    if (
-      selectedGrade !== null &&
-      (game.minGrade > selectedGrade || game.maxGrade < selectedGrade)
-    ) {
-      return false;
-    }
-
-    if (
-      searchTerm &&
-      !game.title.toLowerCase().includes(searchTerm.toLowerCase())
-    ) {
-      return false;
-    }
-
-    return true;
-  });
+  const [showQuiz, setShowQuiz] = useState(false);
+  const [showAgentGame, setShowAgentGame] = useState(false);
+  const [showDigitalFootprintGame, setShowDigitalFootprintGame] = useState(false);
+  const [showCyberHeroRPG, setShowCyberHeroRPG] = useState(false);
+  const [showDataFortressBuilder, setShowDataFortressBuilder] = useState(false);
+  const [showCyberRunnerGame, setShowCyberRunnerGame] = useState(false);
 
   return (
     <>
       <Helmet>
         <title>Games Library | Cyber Quest</title>
-        <meta
-          name="description"
-          content="Explore our collection of fun educational games designed to make learning exciting for grades K-6."
-        />
+        <meta name="description" content="Explore our collection of fun educational games designed to make learning exciting for grades K-6." />
       </Helmet>
-
-        <HeaderDashboard/>
-        
-
-      <div className="pt-24 pb-16 bg-gradient-to-br from-pink-50 via-blue-50 to-purple-50 relative overflow-hidden">
-        <div className="container mx-auto px-4 relative z-10">
+      <HeaderDashboard/>
+      <div className="pt-24 pb-16 bg-gradient-to-br from-pink-50 via-blue-50 to-purple-50">
+        <div className="container mx-auto px-4">
           <h1 className="font-fredoka text-4xl md:text-5xl text-center mb-6">
-            <span className="bg-gradient-to-r from-primary via-purple-500 to-yellow-500 bg-clip-text text-transparent">
-              Games Library
-            </span>
+            <span className="bg-gradient-to-r from-primary via-purple-500 to-yellow-500 bg-clip-text text-transparent">Games Library</span>
           </h1>
           <p className="text-gray-700 text-lg text-center max-w-2xl mx-auto mb-10">
-            Explore our collection of interactive educational games designed to
-            make learning fun while building essential skills.
+            Explore our collection of interactive educational games designed to make learning fun while building essential skills.
           </p>
-
-          <div className="max-w-md mx-auto mb-8">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search for games..."
-                className="w-full px-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <button className="absolute right-3 top-3 text-gray-400">
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <div className="mb-10 flex flex-col md:flex-row gap-6 justify-center">4
-
-            {/* Subjects */}
-            <div className="bg-white p-4 rounded-2xl shadow">
-              <h3 className="font-bold mb-3 text-center md:text-left">
-                Subject:
-              </h3>
-              <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                {subjects.map((subject) => (
-                  <button
-                    key={subject}
-                    className={cn(
-                      "px-4 py-2 rounded-full font-bold",
-                      selectedSubject === subject
-                        ? subject === "all"
-                          ? "bg-primary text-white"
-                          : getSubjectColor(subject)
-                        : "bg-gray-200 text-dark hover:bg-primary/10"
-                    )}
-                    onClick={() => setSelectedSubject(subject)}
-                  >
-                    {subject === "all"
-                      ? "All"
-                      : subject.charAt(0).toUpperCase() + subject.slice(1)}
-                  </button>
-                ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
+            <div className="bg-gradient-to-br from-yellow-200 via-blue-100 to-pink-100 rounded-3xl shadow-lg p-8 text-center cursor-pointer hover:scale-105 transition-transform" onClick={() => setShowAgentGame(true)}>
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                <Search className="w-8 h-8 text-yellow-600" />
               </div>
+              <h3 className="text-2xl font-bold text-yellow-700 mb-2">Junior Agent: Spot the Scam!</h3>
+              <p className="text-gray-700 mb-4">Analyze digital messages and highlight suspicious elements!</p>
+              <Button className="bg-yellow-500 text-white font-bold px-6 py-2 rounded-full">Play Game</Button>
             </div>
-
-            {/* Grade */}
-            <div className="bg-white p-4 rounded-2xl shadow">
-              <h3 className="font-bold mb-3 text-center md:text-left">
-                Level:
-              </h3>
-              <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                {grades.map((grade) => (
-                  <button
-                    key={grade.id !== null ? grade.id : "all"}
-                    className={cn(
-                      "w-10 h-10 rounded-full font-fredoka",
-                      selectedGrade === grade.id
-                        ? grade.id === null
-                          ? "bg-primary text-white"
-                          : getGradeColor(grade.id)
-                        : "bg-gray-200 text-dark hover:bg-primary/10"
-                    )}
-                    onClick={() => setSelectedGrade(grade.id)}
-                  >
-                    {grade.label}
-                  </button>
-                ))}
+            <div className="bg-gradient-to-br from-purple-200 via-blue-100 to-pink-100 rounded-3xl shadow-lg p-8 text-center cursor-pointer hover:scale-105 transition-transform" onClick={() => setShowQuiz(true)}>
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                <Brain className="w-8 h-8 text-purple-600" />
               </div>
+              <h3 className="text-2xl font-bold text-purple-700 mb-2">Cyber Safety Quiz</h3>
+              <p className="text-gray-700 mb-4">Test your cyber safety skills!</p>
+              <Button className="bg-purple-600 text-white font-bold px-6 py-2 rounded-full">Play Quiz</Button>
+            </div>
+            <div className="bg-gradient-to-br from-green-200 via-blue-100 to-purple-100 rounded-3xl shadow-lg p-8 text-center cursor-pointer hover:scale-105 transition-transform" onClick={() => setShowDigitalFootprintGame(true)}>
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                <Shield className="w-8 h-8 text-green-600" />
+              </div>
+              <h3 className="text-2xl font-bold text-green-700 mb-2">Digital Footprint Adventure</h3>
+              <p className="text-gray-700 mb-4">Manage your online presence!</p>
+              <Button className="bg-green-600 text-white font-bold px-6 py-2 rounded-full">Play Game</Button>
+            </div>
+            <div className="bg-gradient-to-br from-red-200 via-purple-100 to-blue-100 rounded-3xl shadow-lg p-8 text-center cursor-pointer hover:scale-105 transition-transform" onClick={() => setShowCyberHeroRPG(true)}>
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                <Sword className="w-8 h-8 text-red-600" />
+              </div>
+              <h3 className="text-2xl font-bold text-red-700 mb-2">Cyber Hero RPG</h3>
+              <p className="text-gray-700 mb-4">Combat cyberbullying in digital realms!</p>
+              <Button className="bg-red-600 text-white font-bold px-6 py-2 rounded-full">Play Game</Button>
+            </div>
+            <div className="bg-gradient-to-br from-cyan-200 via-green-100 to-blue-100 rounded-3xl shadow-lg p-8 text-center cursor-pointer hover:scale-105 transition-transform" onClick={() => setShowDataFortressBuilder(true)}>
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                <Grid3X3 className="w-8 h-8 text-cyan-600" />
+              </div>
+              <h3 className="text-2xl font-bold text-cyan-700 mb-2">Data Fortress Builder</h3>
+              <p className="text-gray-700 mb-4">Build a strategic fortress to protect your data!</p>
+              <Button className="bg-cyan-600 text-white font-bold px-6 py-2 rounded-full">Play Game</Button>
+            </div>
+            <div className="bg-gradient-to-br from-indigo-200 via-blue-100 to-cyan-100 rounded-3xl shadow-lg p-8 text-center cursor-pointer hover:scale-105 transition-transform" onClick={() => setShowCyberRunnerGame(true)}>
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                <Zap className="w-8 h-8 text-indigo-600" />
+              </div>
+              <h3 className="text-2xl font-bold text-indigo-700 mb-2">Cyber Runner</h3>
+              <p className="text-gray-700 mb-4">Run, jump, and dash to deliver messages safely through digital threats!</p>
+              <Button className="bg-indigo-600 text-white font-bold px-6 py-2 rounded-full">Play Game</Button>
             </div>
           </div>
         </div>
       </div>
-      <div className="absolute inset-0 pointer-events-none z-0">
-
-        <div className="absolute top-[-100px] left-[-100px] w-[300px] h-[300px] bg-yellow-400 opacity-60 rounded-full"></div>
-        <div className="absolute top-[-50px] left-[300px] w-[200px] h-[200px] bg-green-400 opacity-60 rounded-full"></div>
-        <div className="absolute top-[220px] left-[800px] w-[300px] h-[300px] bg-primary opacity-30 rounded-full"></div>
-        <div className="absolute top-[-70px] right-[-0px] w-[300px] h-[300px] bg-purple-400 opacity-30 rounded-full"></div>
-
-        <div className="absolute top-10 right-10 text-purple text-2xl">✦</div>
-        <div className="absolute top-20 left-20 text-secondary text-xl">✦</div>
-        <div className="absolute bottom-40 right-20 text-primary text-2xl">
-          ✦
-        </div>
-
-        <div className="absolute top-[45rem] left-40 text-purple-400 text-2xl">
-          ✦
-        </div>
-        <div className="absolute top-60 right-[66rem] text-purple-400 text-xl">
-          ✦
-        </div>
-        <div className="absolute bottom-60 right-[30rem] text-purple text-2xl">
-          ✦
-        </div>
-        <div className="absolute top-[55rem] left-20 text-purple text-2xl">
-          ✦
-        </div>
-      </div>
-
-      <div className="py-12 bg-white">
-        <div className="container mx-auto px-4">
-          {isLoading && (
-            <div className="flex justify-center py-20">
-              <Loader2 className="h-12 w-12 animate-spin text-primary" />
-            </div>
-          )}
-
-          {error && (
-            <div className="text-center py-20">
-              <h3 className="text-2xl font-fredoka text-gray-700 mb-4">
-                Oops! Something went wrong
-              </h3>
-              <p className="text-gray-600 mb-6">
-                We couldn't load the games right now.
-              </p>
-              <Button
-                onClick={() => window.location.reload()}
-                className="bg-primary text-white"
-              >
-                Try Again
-              </Button>
-            </div>
-          )}
-
-          {!isLoading && !error && (
-            <div className="mb-8">
-              <h2 className="font-fredoka text-2xl mb-2">
-                {filteredGames?.length || 0} Games Found
-              </h2>
-              <div className="h-1 w-20 bg-primary rounded-full"></div>
-            </div>
-          )}
-
-          {!isLoading && !error && (
-            <>
-              {filteredGames && filteredGames.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {filteredGames.map((game) => (
-                    <GameCard key={game.id} game={game} />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-20 bg-gray-50 rounded-3xl">
-                  <h3 className="text-2xl font-fredoka mb-2">No games found</h3>
-                  <p className="text-gray-600 mb-6">
-                    Try changing your filters to see more games.
-                  </p>
-                  <Button
-                    onClick={() => {
-                      setSelectedSubject("all");
-                      setSelectedGrade(null);
-                      setSearchTerm("");
-                    }}
-                    className="bg-primary text-white"
-                  >
-                    Clear Filters
-                  </Button>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </div>
+      {showAgentGame && <JuniorAgentGame onClose={() => setShowAgentGame(false)} />}
+      {showQuiz && <CyberSafetyQuiz onClose={() => setShowQuiz(false)} />}
+      {showDigitalFootprintGame && <DigitalFootprintGameModal onClose={() => setShowDigitalFootprintGame(false)} />}
+      {showCyberHeroRPG && <CyberHeroRPG onClose={() => setShowCyberHeroRPG(false)} />}
+      {showDataFortressBuilder && <DataFortressBuilder onClose={() => setShowDataFortressBuilder(false)} />}
+      {showCyberRunnerGame && <CyberRunnerGame onClose={() => setShowCyberRunnerGame(false)} />}
     </>
   );
 };

@@ -39,7 +39,7 @@ const LoginPage: React.FC = () => {
 
             <p className="text-center p-4 text-gray-700 mb-4">
                     Welcome back! Please enter your credentials to access your account. If you don't have an account yet, you can 
-                    <a href="/signup" className="text-white hover:underline"> sign up here</a>.
+                    <a href="/signup" className="text-blue-800 hover:underline"> sign up here</a>.
                 </p>
 
       <form onSubmit={handleSubmit} className='py-5'>
@@ -57,7 +57,7 @@ const LoginPage: React.FC = () => {
                     
             <p className="text-gray-700 mt-2 text-sm text-center py-5">
                 If you have forgotten your password, you can reset it by clicking
-                <a href="/reset-password" className="text-white hover:underline"> here</a>.
+                <a href="/reset-password" className="text-blue-800 hover:underline"> here</a>.
             </p>
 
         </div>

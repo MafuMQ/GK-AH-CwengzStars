@@ -47,7 +47,6 @@ const Footer = () => {
             <ul className="text-gray-700 space-y-3">
               <li><Link href="/"><a className="hover:text-primary transition-colors">Home</a></Link></li>
               <li><Link href="/games"><a className="hover:text-primary transition-colors">Games Library</a></Link></li>
-              <li><Link href="/characters"><a className="hover:text-primary transition-colors">Learning Characters</a></Link></li>
               <li><Link href="/achievements"><a className="hover:text-primary transition-colors">Rewards & Badges</a></Link></li>
               <li><Link href="/parents"><a className="hover:text-primary transition-colors">Parent Dashboard</a></Link></li>
               <li><Link href="/subscription"><a className="hover:text-primary transition-colors">Subscription Plans</a></Link></li>
@@ -57,7 +56,6 @@ const Footer = () => {
           <div>
             <h3 className="font-fredoka text-primary mb-6">Support</h3>
             <ul className="text-gray-700 space-y-3">
-              <li><a href="#" className="hover:text-primary transition-colors">Help Center</a></li>
               <li><a href="#" className="hover:text-primary transition-colors">About Us</a></li>
               <li><a href="#" className="hover:text-primary transition-colors">FAQ</a></li>
               <li><a href="#" className="hover:text-primary transition-colors">Contact Us</a></li>
