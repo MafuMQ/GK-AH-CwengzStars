@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Play, Pause, RotateCcw, Zap, Heart, Shield, AlertTriangle, User, Package, Bug } from "lucide-react";
 
 interface CyberRunnerGameProps {
@@ -14,12 +14,12 @@ interface Obstacle {
 }
 
 interface Collectible {
-  id: number;
-  type: 'private_data' | 'trusted_adult';
-  x: number;
-  y: number;
-  collected: boolean;
-}
+   id: number;
+   type: 'private_data' | 'trusted_adult' | 'firewall_boost' | 'antivirus_shield';
+   x: number;
+   y: number;
+   collected: boolean;
+ }
 
 const CyberRunnerGame = ({ onClose }: CyberRunnerGameProps) => {
   const [gameState, setGameState] = useState<'menu' | 'playing' | 'paused' | 'gameOver'>('menu');
@@ -33,6 +33,11 @@ const CyberRunnerGame = ({ onClose }: CyberRunnerGameProps) => {
   const [obstacles, setObstacles] = useState<Obstacle[]>([]);
   const [collectibles, setCollectibles] = useState<Collectible[]>([]);
   const [gameLoop, setGameLoop] = useState<NodeJS.Timeout | null>(null);
+  const [lives, setLives] = useState(3);
+  const [combo, setCombo] = useState(0);
+  const [level, setLevel] = useState(1);
+  const [experience, setExperience] = useState(0);
+  const [activeEffects, setActiveEffects] = useState<{type: string, duration: number}[]>([]);
 
   const jump = useCallback(() => {
     if (!isJumping && gameState === 'playing') {
@@ -63,6 +68,11 @@ const CyberRunnerGame = ({ onClose }: CyberRunnerGameProps) => {
     setObstacles([]);
     setCollectibles([]);
     setGameSpeed(2);
+    setLives(3);
+    setCombo(0);
+    setLevel(1);
+    setExperience(0);
+    setActiveEffects([]);
   };
 
   const pauseGame = () => {
@@ -77,6 +87,11 @@ const CyberRunnerGame = ({ onClose }: CyberRunnerGameProps) => {
     setWellbeing(100);
     setObstacles([]);
     setCollectibles([]);
+    setLives(3);
+    setCombo(0);
+    setLevel(1);
+    setExperience(0);
+    setActiveEffects([]);
     if (gameLoop) {
       clearInterval(gameLoop);
       setGameLoop(null);
@@ -135,15 +150,17 @@ const CyberRunnerGame = ({ onClose }: CyberRunnerGameProps) => {
         }
 
         // Generate new collectibles
-        if (Math.random() < 0.015) {
-          const types: ('private_data' | 'trusted_adult')[] = ['private_data', 'trusted_adult'];
+        if (Math.random() < 0.02) {
+          const types: ('private_data' | 'trusted_adult' | 'firewall_boost' | 'antivirus_shield')[] =
+            ['private_data', 'trusted_adult', 'firewall_boost', 'antivirus_shield'];
           const type = types[Math.floor(Math.random() * types.length)];
 
           const newCollectible: Collectible = {
             id: Date.now() + Math.random(),
             type,
             x: 100,
-            y: type === 'private_data' ? 40 : 80,
+            y: type === 'private_data' ? 40 : type === 'trusted_adult' ? 80 :
+               type === 'firewall_boost' ? 60 : 30,
             collected: false
           };
           setCollectibles(prev => [...prev, newCollectible]);
@@ -179,8 +196,21 @@ const CyberRunnerGame = ({ onClose }: CyberRunnerGameProps) => {
               setSecurityScore(prev => Math.min(100, prev + 15));
               setGameSpeed(prev => prev + 0.5);
               setTimeout(() => setGameSpeed(2), 2000);
+              setCombo(prev => prev + 1);
+              setExperience(prev => prev + 10);
             } else if (col.type === 'private_data') {
               setSecurityScore(prev => Math.max(0, prev - 25));
+              setCombo(0);
+            } else if (col.type === 'firewall_boost') {
+              setActiveEffects(prev => [...prev, {type: 'firewall', duration: 1000}]);
+              setSecurityScore(prev => Math.min(100, prev + 20));
+              setCombo(prev => prev + 1);
+              setExperience(prev => prev + 15);
+            } else if (col.type === 'antivirus_shield') {
+              setActiveEffects(prev => [...prev, {type: 'antivirus', duration: 800}]);
+              setLives(prev => Math.min(3, prev + 1));
+              setCombo(prev => prev + 1);
+              setExperience(prev => prev + 20);
             }
           }
         });
@@ -190,8 +220,21 @@ const CyberRunnerGame = ({ onClose }: CyberRunnerGameProps) => {
 
         // Check game over
         if (wellbeing <= 0 || securityScore <= 0) {
-          setGameState('gameOver');
-          if (gameLoop) clearInterval(gameLoop);
+          if (lives > 1) {
+            setLives(prev => prev - 1);
+            setWellbeing(100);
+            setSecurityScore(100);
+            setCombo(0);
+          } else {
+            setGameState('gameOver');
+            if (gameLoop) clearInterval(gameLoop);
+          }
+        }
+
+        // Level progression
+        if (Math.floor(distance) > 0 && Math.floor(distance) % 500 === 0) {
+          setLevel(prev => prev + 1);
+          setGameSpeed(prev => prev + 0.2);
         }
       }, 100);
 
@@ -203,34 +246,51 @@ const CyberRunnerGame = ({ onClose }: CyberRunnerGameProps) => {
     };
   }, [gameState, gameSpeed, obstacles, collectibles, runnerY, wellbeing, securityScore]);
 
-  const getSecurityLevel = () => {
+  const securityInfo = useMemo(() => {
     if (securityScore >= 80) return { level: "Excellent", color: "text-green-600" };
     if (securityScore >= 60) return { level: "Good", color: "text-blue-600" };
     if (securityScore >= 40) return { level: "Fair", color: "text-yellow-600" };
     return { level: "Critical", color: "text-red-600" };
-  };
-
-  const securityInfo = getSecurityLevel();
+  }, [securityScore]);
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/30 backdrop-blur-sm">
+    <div
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/30 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="cyber-runner-title"
+    >
       <div className="relative max-w-6xl w-full mx-auto bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 rounded-3xl shadow-2xl p-8">
         <button
           className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl font-bold"
           onClick={onClose}
+          aria-label="Close Cyber Runner game"
         >
           ×
         </button>
 
         {/* Header */}
         <div className="text-center mb-6">
-          <h2 className="text-3xl font-bold text-white mb-2">Cyber Runner</h2>
-          <div className="flex justify-center items-center gap-6 text-white">
-            <div className="text-lg">Distance: {Math.floor(distance)}m</div>
-            <div className={`text-xl font-bold ${securityInfo.color}`}>
+          <h2 id="cyber-runner-title" className="text-3xl font-bold text-white mb-2">Cyber Runner</h2>
+          <div className="flex justify-center items-center gap-6 text-white" role="status" aria-live="polite">
+            <div className="text-lg" aria-label={`Distance traveled: ${Math.floor(distance)} meters`}>
+              Distance: {Math.floor(distance)}m
+            </div>
+            <div className={`text-xl font-bold ${securityInfo.color}`} aria-label={`Security level: ${securityInfo.level}`}>
               Security: {securityInfo.level}
             </div>
-            <div className="text-lg">Score: {Math.floor(score)}</div>
+            <div className="text-lg" aria-label={`Current score: ${Math.floor(score)}`}>
+              Score: {Math.floor(score)}
+            </div>
+            <div className="text-lg" aria-label={`Lives remaining: ${lives}`}>
+              ❤️ Lives: {lives}
+            </div>
+            <div className="text-lg" aria-label={`Current combo: ${combo}`}>
+              🔥 Combo: {combo}
+            </div>
+            <div className="text-lg" aria-label={`Current level: ${level}`}>
+              ⭐ Level: {level}
+            </div>
           </div>
         </div>
 
@@ -263,7 +323,8 @@ const CyberRunnerGame = ({ onClose }: CyberRunnerGameProps) => {
             </div>
             <button
               onClick={startGame}
-              className="bg-green-600 text-white font-bold py-3 px-8 rounded-full hover:bg-green-700 transition-all"
+              className="bg-green-600 text-white font-bold py-3 px-8 rounded-full hover:bg-green-700 transition-all focus:outline-none focus:ring-4 focus:ring-green-300"
+              aria-label="Start the Cyber Runner game"
             >
               Start Running!
             </button>
@@ -305,11 +366,15 @@ const CyberRunnerGame = ({ onClose }: CyberRunnerGameProps) => {
                 <div
                   key={col.id}
                   className={`absolute w-6 h-6 flex items-center justify-center text-sm ${
-                    col.type === 'private_data' ? 'bg-orange-500' : 'bg-green-500'
+                    col.type === 'private_data' ? 'bg-orange-500' :
+                    col.type === 'trusted_adult' ? 'bg-green-500' :
+                    col.type === 'firewall_boost' ? 'bg-blue-500' : 'bg-purple-500'
                   }`}
                   style={{ left: `${col.x}%`, bottom: `${col.y}%` }}
                 >
-                  {col.type === 'private_data' ? '📦' : '👨‍💼'}
+                  {col.type === 'private_data' ? '📦' :
+                   col.type === 'trusted_adult' ? '👨‍💼' :
+                   col.type === 'firewall_boost' ? '🛡️' : '🛡️'}
                 </div>
               ))}
 
@@ -368,7 +433,7 @@ const CyberRunnerGame = ({ onClose }: CyberRunnerGameProps) => {
             <h3 className="text-2xl font-bold mb-4 text-white">Mission Complete!</h3>
 
             <div className="bg-gray-800 rounded-xl p-6 mb-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div className="text-center">
                   <div className="text-3xl font-bold text-cyan-400">
                     {Math.floor(distance)}m
@@ -386,6 +451,12 @@ const CyberRunnerGame = ({ onClose }: CyberRunnerGameProps) => {
                     {Math.floor(score)}
                   </div>
                   <div className="text-sm text-gray-400">Total Score</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-purple-400">
+                    {level}
+                  </div>
+                  <div className="text-sm text-gray-400">Level Reached</div>
                 </div>
               </div>
 

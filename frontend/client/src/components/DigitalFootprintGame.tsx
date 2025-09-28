@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Heart, MessageCircle, Share2, Users, Smartphone, Shield, AlertTriangle, CheckCircle, X } from "lucide-react";
 
 interface DigitalFootprintGameProps {
@@ -206,6 +206,15 @@ const DigitalFootprintGame = ({ onClose }: DigitalFootprintGameProps) => {
   const [selectedApps, setSelectedApps] = useState<number[]>([]);
   const [unlockedOpportunities, setUnlockedOpportunities] = useState<number[]>([]);
   const [gameLog, setGameLog] = useState<string[]>([]);
+  const [showTutorial, setShowTutorial] = useState(true);
+  const [riskTolerance, setRiskTolerance] = useState(50);
+  const [privacySettings, setPrivacySettings] = useState({
+    profileVisible: true,
+    showActivity: true,
+    allowMessages: true,
+    shareLocation: false
+  });
+  const [weeklyActivity, setWeeklyActivity] = useState(0);
 
   const addToLog = (message: string) => {
     setGameLog(prev => [...prev, `Year ${currentYear}: ${message}`]);
@@ -242,10 +251,25 @@ const DigitalFootprintGame = ({ onClose }: DigitalFootprintGameProps) => {
         ? -post.consequences.reputation
         : post.consequences.reputation;
 
-      setReputation(current => Math.max(0, Math.min(100, current + reputationChange)));
+      // Adjust based on privacy settings
+      let adjustedReputationChange = reputationChange;
+      if (!privacySettings.profileVisible && post.category === 'personal') {
+        adjustedReputationChange *= 0.5; // Reduced impact for private profiles
+      }
+      if (privacySettings.showActivity === false) {
+        adjustedReputationChange *= 1.2; // More careful users get better results
+      }
+
+      setReputation(current => Math.max(0, Math.min(100, current + adjustedReputationChange)));
       updateFootprint(prev.includes(postId)
         ? []
         : [post.consequences.footprint]);
+
+      // Update risk tolerance based on post risk level
+      const riskChange = post.riskLevel === 'high' ? 15 : post.riskLevel === 'medium' ? 8 : 3;
+      setRiskTolerance(current => Math.max(0, Math.min(100,
+        prev.includes(postId) ? current - riskChange : current + riskChange
+      )));
 
       addToLog(prev.includes(postId)
         ? `Removed post: "${post.content.substring(0, 30)}..."`
@@ -324,46 +348,131 @@ const DigitalFootprintGame = ({ onClose }: DigitalFootprintGameProps) => {
     }
   };
 
-  const getFootprintColor = () => {
+  const footprintColorClasses = useMemo(() => {
     switch (digitalFootprint) {
       case 'green': return 'text-green-600 bg-green-100';
       case 'yellow': return 'text-yellow-600 bg-yellow-100';
       case 'red': return 'text-red-600 bg-red-100';
     }
-  };
+  }, [digitalFootprint]);
 
-  const getReputationColor = () => {
+  const reputationColorClasses = useMemo(() => {
     if (reputation >= 70) return 'text-green-600';
     if (reputation >= 40) return 'text-yellow-600';
     return 'text-red-600';
-  };
+  }, [reputation]);
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/30 backdrop-blur-sm">
+    <div
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/30 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="digital-footprint-title"
+    >
       <div className="relative max-w-4xl w-full mx-auto bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-3xl shadow-2xl p-8 overflow-y-auto max-h-screen">
         <button
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl font-bold"
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl font-bold focus:outline-none focus:ring-4 focus:ring-gray-300"
           onClick={onClose}
+          aria-label="Close Digital Footprint Adventure game"
         >
           ×
         </button>
 
         {/* Header */}
         <div className="text-center mb-6">
-          <h2 className="text-3xl font-bold text-purple-700 mb-2">Digital Footprint Adventure</h2>
-          <div className="flex justify-center items-center gap-4 mb-4">
-            <span className="text-lg font-semibold">Year {currentYear} of 3</span>
-            <div className={`px-3 py-1 rounded-full font-bold ${getFootprintColor()}`}>
+          <h2 id="digital-footprint-title" className="text-3xl font-bold text-purple-700 mb-2">Digital Footprint Adventure</h2>
+          <div className="flex justify-center items-center gap-4 mb-4 flex-wrap" role="status" aria-live="polite">
+            <span className="text-lg font-semibold" aria-label={`Current year: ${currentYear} of 3`}>
+              Year {currentYear} of 3
+            </span>
+            <div className={`px-3 py-1 rounded-full font-bold ${footprintColorClasses}`} aria-label={`Digital footprint: ${digitalFootprint}`}>
               Footprint: {digitalFootprint.toUpperCase()}
             </div>
-            <div className={`text-xl font-bold ${getReputationColor()}`}>
+            <div className={`text-xl font-bold ${reputationColorClasses}`} aria-label={`Current reputation: ${reputation} out of 100`}>
               Reputation: {reputation}
+            </div>
+            <div className="flex items-center gap-2" aria-label={`Risk tolerance: ${riskTolerance} out of 100`}>
+              <span className="text-sm font-medium">Risk Tolerance:</span>
+              <div className="w-20 h-2 bg-gray-200 rounded-full" role="progressbar" aria-valuenow={riskTolerance} aria-valuemin={0} aria-valuemax={100}>
+                <div
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    riskTolerance < 30 ? 'bg-green-500' :
+                    riskTolerance < 70 ? 'bg-yellow-500' : 'bg-red-500'
+                  }`}
+                  style={{ width: `${riskTolerance}%` }}
+                ></div>
+              </div>
+              <span className="text-sm font-bold w-8">{riskTolerance}</span>
             </div>
           </div>
         </div>
 
+        {/* Tutorial Modal */}
+        {showTutorial && gamePhase === 'intro' && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl p-8 max-w-2xl mx-4">
+              <h3 className="text-2xl font-bold mb-4 text-center">🎮 How to Play</h3>
+              <div className="space-y-4 mb-6">
+                <div className="flex items-start gap-3">
+                  <div className="bg-purple-100 p-2 rounded-full">
+                    <span className="font-bold text-purple-600">1</span>
+                  </div>
+                  <div>
+                    <h4 className="font-bold">Manage Your Profile</h4>
+                    <p className="text-sm text-gray-600">Set up your digital identity and privacy settings</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="bg-purple-100 p-2 rounded-full">
+                    <span className="font-bold text-purple-600">2</span>
+                  </div>
+                  <div>
+                    <h4 className="font-bold">Choose Your Posts</h4>
+                    <p className="text-sm text-gray-600">Decide what to share on social media - every post matters!</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="bg-purple-100 p-2 rounded-full">
+                    <span className="font-bold text-purple-600">3</span>
+                  </div>
+                  <div>
+                    <h4 className="font-bold">Connect Apps</h4>
+                    <p className="text-sm text-gray-600">Choose which apps to use and understand their privacy implications</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="bg-purple-100 p-2 rounded-full">
+                    <span className="font-bold text-purple-600">4</span>
+                  </div>
+                  <div>
+                    <h4 className="font-bold">Unlock Opportunities</h4>
+                    <p className="text-sm text-gray-600">Build a positive digital footprint to access better opportunities</p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-center gap-4">
+                <button
+                  onClick={() => setShowTutorial(false)}
+                  className="bg-gray-300 text-gray-700 font-bold py-2 px-6 rounded-full hover:bg-gray-400"
+                >
+                  Skip Tutorial
+                </button>
+                <button
+                  onClick={() => {
+                    setShowTutorial(false);
+                    // Continue to main intro
+                  }}
+                  className="bg-purple-600 text-white font-bold py-2 px-6 rounded-full hover:bg-purple-700"
+                >
+                  Got it!
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Game Content */}
-        {gamePhase === 'intro' && (
+        {gamePhase === 'intro' && !showTutorial && (
           <div className="text-center">
             <h3 className="text-2xl font-bold mb-4">Welcome to Your Digital Journey!</h3>
             <p className="text-lg mb-6">
@@ -389,7 +498,8 @@ const DigitalFootprintGame = ({ onClose }: DigitalFootprintGameProps) => {
             </div>
             <button
               onClick={nextPhase}
-              className="bg-purple-600 text-white font-bold py-3 px-8 rounded-full hover:bg-purple-700 transition-all"
+              className="bg-purple-600 text-white font-bold py-3 px-8 rounded-full hover:bg-purple-700 transition-all focus:outline-none focus:ring-4 focus:ring-purple-300"
+              aria-label="Start your digital footprint journey"
             >
               Start Your Journey
             </button>
@@ -399,27 +509,83 @@ const DigitalFootprintGame = ({ onClose }: DigitalFootprintGameProps) => {
         {gamePhase === 'profile' && (
           <div className="text-center">
             <h3 className="text-2xl font-bold mb-4">Create Your Digital Profile</h3>
-            <p className="text-lg mb-6">Your profile is the foundation of your online presence.</p>
-            <div className="bg-white rounded-xl p-6 shadow-lg mb-6">
-              <div className="w-20 h-20 bg-purple-200 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <Users className="w-10 h-10 text-purple-600" />
-              </div>
-              <h4 className="text-xl font-bold mb-2">Alex Thompson</h4>
-              <p className="text-gray-600 mb-4">Middle School Student | Age 13</p>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <strong>Interests:</strong> Gaming, Sports, Art
+            <p className="text-lg mb-6">Your profile is the foundation of your online presence. Set your privacy preferences wisely!</p>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              {/* Profile Info */}
+              <div className="bg-white rounded-xl p-6 shadow-lg">
+                <div className="w-20 h-20 bg-purple-200 rounded-full mx-auto mb-4 flex items-center justify-center">
+                  <Users className="w-10 h-10 text-purple-600" />
                 </div>
-                <div>
-                  <strong>Goals:</strong> Good grades, Make friends, Learn new things
+                <h4 className="text-xl font-bold mb-2">Alex Thompson</h4>
+                <p className="text-gray-600 mb-4">Middle School Student | Age 13</p>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <strong>Interests:</strong> Gaming, Sports, Art
+                  </div>
+                  <div>
+                    <strong>Goals:</strong> Good grades, Make friends, Learn new things
+                  </div>
+                </div>
+              </div>
+
+              {/* Privacy Settings */}
+              <div className="bg-white rounded-xl p-6 shadow-lg">
+                <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-blue-600" />
+                  Privacy Settings
+                </h4>
+                <div className="space-y-3">
+                  <label className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm">Public Profile</span>
+                    <input
+                      type="checkbox"
+                      checked={privacySettings.profileVisible}
+                      onChange={(e) => setPrivacySettings(prev => ({...prev, profileVisible: e.target.checked}))}
+                      className="w-4 h-4 text-purple-600"
+                    />
+                  </label>
+                  <label className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm">Show Online Activity</span>
+                    <input
+                      type="checkbox"
+                      checked={privacySettings.showActivity}
+                      onChange={(e) => setPrivacySettings(prev => ({...prev, showActivity: e.target.checked}))}
+                      className="w-4 h-4 text-purple-600"
+                    />
+                  </label>
+                  <label className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm">Allow Direct Messages</span>
+                    <input
+                      type="checkbox"
+                      checked={privacySettings.allowMessages}
+                      onChange={(e) => setPrivacySettings(prev => ({...prev, allowMessages: e.target.checked}))}
+                      className="w-4 h-4 text-purple-600"
+                    />
+                  </label>
+                  <label className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm">Share Location Data</span>
+                    <input
+                      type="checkbox"
+                      checked={privacySettings.shareLocation}
+                      onChange={(e) => setPrivacySettings(prev => ({...prev, shareLocation: e.target.checked}))}
+                      className="w-4 h-4 text-purple-600"
+                    />
+                  </label>
+                </div>
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                  <p className="text-xs text-blue-600">
+                    💡 <strong>Tip:</strong> More privacy = safer online experience, but you might miss some social opportunities!
+                  </p>
                 </div>
               </div>
             </div>
+
             <button
               onClick={nextPhase}
               className="bg-purple-600 text-white font-bold py-3 px-8 rounded-full hover:bg-purple-700 transition-all"
             >
-              Continue
+              Continue to Social Media
             </button>
           </div>
         )}
@@ -592,13 +758,13 @@ const DigitalFootprintGame = ({ onClose }: DigitalFootprintGameProps) => {
             <div className="bg-white rounded-xl p-6 shadow-lg mb-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div className="text-center">
-                  <div className={`text-3xl font-bold ${getReputationColor()}`}>
+                  <div className={`text-3xl font-bold ${reputationColorClasses}`}>
                     {reputation}
                   </div>
                   <div className="text-sm text-gray-600">Final Reputation</div>
                 </div>
                 <div className="text-center">
-                  <div className={`text-3xl font-bold ${getFootprintColor()}`}>
+                  <div className={`text-3xl font-bold ${footprintColorClasses}`}>
                     {digitalFootprint.toUpperCase()}
                   </div>
                   <div className="text-sm text-gray-600">Digital Footprint</div>
