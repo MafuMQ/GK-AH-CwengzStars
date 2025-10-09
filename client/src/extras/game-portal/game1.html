@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Sort - Privacy Game</title>
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .shadow-text-neon {
+            text-shadow: 0 0 10px rgba(45, 212, 255, 0.8), 0 0 20px rgba(45, 212, 255, 0.6);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // -------------------------------------------------------------
+        // 1. GAME DATA STRUCTURE
+        // -------------------------------------------------------------
+
+        const INFO_ITEMS = [
+            { id: 1, text: "My Home Address", category: 'PRIVATE', icon: '📍' },
+            { id: 2, text: "My Favorite Color", category: 'PUBLIC', icon: '🌈' },
+            { id: 3, text: "Full School Name", category: 'PRIVATE', icon: '🏫' },
+            { id: 4, text: "My Pet's Name", category: 'PUBLIC', icon: '🐶' },
+            { id: 5, text: "My Phone Number", category: 'PRIVATE', icon: '📱' },
+            { id: 6, text: "A Drawing of a Tree", category: 'PUBLIC', icon: '🌳' },
+            { id: 7, text: "Parent's Credit Card", category: 'PRIVATE', icon: '💳' },
+            { id: 8, text: "Favorite Snack", category: 'PUBLIC', icon: '🍪' },
+            { id: 9, text: "Secret Club Password", category: 'PRIVATE', icon: '🔒' },
+            { id: 10, text: "Picture of a Car", category: 'PUBLIC', icon: '🚗' },
+        ];
+
+        const TARGETS = {
+            PRIVATE: { name: "PRIVATE VAULT", color: 'bg-fuchsia-900/30', border: 'border-fuchsia-400', icon: '🚫' },
+            PUBLIC: { name: "PUBLIC POST", color: 'bg-cyan-900/30', border: 'border-cyan-400', icon: '✅' },
+        };
+
+        // -------------------------------------------------------------
+        // 2. COMMUNICATION BRIDGE TO NATIVE FLUTTER SHELL
+        // -------------------------------------------------------------
+
+        const sendResultToFlutter = (score, gameId) => {
+            const result = {
+                gameId,
+                score,
+                timestamp: new Date().toISOString(),
+            };
+
+            if (window.flutter_inappwebview) {
+                window.flutter_inappwebview.callHandler('saveProgress', JSON.stringify(result));
+            } else {
+                console.warn("Flutter bridge not available. Score:", score);
+                console.log(`Game Finished! Score: ${score}. (No Flutter bridge detected.)`);
+            }
+        };
+
+        // -------------------------------------------------------------
+        // 3. MAIN GAME COMPONENT
+        // -------------------------------------------------------------
+
+        const PrivateInfoSorter = () => {
+            const [items, setItems] = React.useState(INFO_ITEMS);
+            const [score, setScore] = React.useState(0);
+            const [gameOver, setGameOver] = React.useState(false);
+            const [feedback, setFeedback] = React.useState(null);
+
+            const itemsRemaining = React.useMemo(() => items.filter(i => !i.sorted), [items]);
+            const totalCorrect = React.useMemo(() => items.filter(i => i.sorted && i.correct).length, [items]);
+
+            React.useEffect(() => {
+                if (itemsRemaining.length === 0 && !gameOver) {
+                    handleGameOver();
+                }
+            }, [itemsRemaining, gameOver]);
+
+            const handleDrop = React.useCallback((itemId, targetCategory) => {
+                if (gameOver) return;
+
+                setItems(prevItems => prevItems.map(item => {
+                    if (item.id === itemId) {
+                        const isCorrect = item.category === targetCategory;
+                        const points = isCorrect ? 10 : -5;
+
+                        setScore(s => Math.max(0, s + points)); // Score counter
+                        setFeedback({
+                            text: isCorrect 
+                                ? `CYBER-CONFIRMED: Safe for the ${targetCategory.toLowerCase().replace('_', ' ')}!` 
+                                : `WARNING: That should have gone into the ${item.category === 'PRIVATE' ? 'VAULT' : 'POST'}!`,
+                            isCorrect: isCorrect,
+                        });
+
+                        return { ...item, sorted: true, correct: isCorrect, finalCategory: targetCategory };
+                    }
+                    return item;
+                }));
+            }, [gameOver]);
+
+            const handleGameOver = () => {
+                setGameOver(true);
+                const finalScore = totalCorrect * 10;
+                setScore(finalScore);
+                sendResultToFlutter(finalScore, 'privacy_puzzle_v1');
+            };
+
+            const resetGame = () => {
+                setItems(INFO_ITEMS.map(i => ({ ...i, sorted: false, correct: false, finalCategory: null })));
+                setScore(0);
+                setGameOver(false);
+                setFeedback(null);
+            };
+
+            const handleDragStart = (e, itemId) => {
+                e.dataTransfer.setData("itemId", itemId);
+            };
+
+            const renderItemCard = (item) => (
+                <div
+                    key={item.id}
+                    draggable={!item.sorted}
+                    onDragStart={(e) => handleDragStart(e, item.id)}
+                    className={`p-3 m-1 text-sm rounded-md shadow-lg cursor-grab font-mono uppercase transition-all
+                                ${item.sorted 
+                                    ? 'opacity-30 pointer-events-none bg-gray-900 border border-gray-700' 
+                                    : 'bg-gray-700 text-pink-400 border border-pink-400 hover:shadow-[0_0_8px_rgba(232,121,202,0.8)]'}`}
+                >
+                    <span className="text-xl mr-1">{item.icon}</span>
+                    {item.text}
+                </div>
+            );
+
+            return (
+                //cyberpunk background theme
+                <div className="min-h-screen bg-slate-900 p-4 font-mono flex flex-col items-center text-gray-200">
+                    
+                    {/* Title */}
+                    <h1 className="text-4xl font-extrabold text-cyan-400 my-6 shadow-text-neon uppercase tracking-widest">
+                        CYBER SORT
+                    </h1>
+                    
+                    {/* Score and Info Bar */}
+                    <div className="text-xl font-semibold mb-6 p-3 border-2 border-pink-400 rounded-lg bg-slate-800 shadow-[0_0_8px_rgba(232,121,202,0.5)]">
+                        DATA BLOCKS REMAINING: <span className="text-yellow-400 font-bold mr-4">{itemsRemaining.length}</span> | 
+                        SCORE: <span className="text-green-400 font-bold">{score}</span>
+                    </div>
+
+                    {/* Feedback Message */}
+                    {feedback && (
+                        <div 
+                            key={feedback.text} 
+                            className={`px-4 py-2 mb-4 rounded-full text-sm font-bold animate-pulse transition-all
+                                        ${feedback.isCorrect ? 'bg-green-600 text-white shadow-green-500/50' : 'bg-red-600 text-white shadow-red-500/50'}`}
+                        >
+                            {feedback.text}
+                        </div>
+                    )}
+
+                    {/* Item tray (where items start) - Styled as a circuit board area */}
+                    <div className="w-full max-w-4xl bg-gray-900 p-6 rounded-xl border-4 border-cyan-400 shadow-[0_0_15px_rgba(45,212,255,0.7)] mb-8">
+                        <h2 className="text-lg font-bold text-cyan-400 mb-4 uppercase">UNCLASSIFIED DATA STREAM</h2>
+                        <div className="flex flex-wrap justify-center min-h-[100px]">
+                            {itemsRemaining.map(renderItemCard)}
+                        </div>
+                    </div>
+
+                    {/* Drop Targets */}
+                    <div className="flex flex-col md:flex-row w-full max-w-4xl justify-around gap-6">
+                        {['PRIVATE', 'PUBLIC'].map(category => (
+                            <DropTarget
+                                key={category}
+                                category={category}
+                                onDrop={handleDrop}
+                                target={TARGETS[category]}
+                                itemsInTarget={items.filter(i => i.sorted && i.finalCategory === category)}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Game Over Modal */}
+                    {gameOver && (
+                        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+                            <div className="bg-slate-900 p-8 rounded-xl text-center shadow-[0_0_20px_rgba(250,200,255,0.9)] border-4 border-pink-400 max-w-sm">
+                                <h2 className="text-5xl font-extrabold text-pink-400 mb-4 uppercase">DECRYPTION COMPLETE</h2>
+                                <p className="text-2xl mb-4 text-cyan-400">FINAL SCORE: <span className="font-bold">{score}</span></p>
+                                <p className="mb-6 text-gray-300">You correctly classified {totalCorrect} data blocks.</p>
+                                <button
+                                    onClick={resetGame}
+                                    className="px-6 py-3 bg-cyan-600 text-slate-900 font-bold rounded-lg hover:bg-cyan-400 transition-colors shadow-[0_0_8px_rgba(45,212,255,0.8)]"
+                                >
+                                    RESTART SIMULATION
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const DropTarget = ({ category, onDrop, target, itemsInTarget }) => {
+            const handleDragOver = (e) => {
+                e.preventDefault();
+            };
+
+            const handleDrop = (e) => {
+                e.preventDefault();
+                const itemId = parseInt(e.dataTransfer.getData("itemId"));
+                onDrop(itemId, category);
+            };
+
+            return (
+                <div
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                    className={`p-6 rounded-2xl border-4 border-dashed flex-1 min-h-[250px] transition-all
+                                ${target.color} ${target.border} shadow-[0_0_8px_rgba(45,212,255,0.8)]
+                                hover:shadow-[0_0_15px_rgba(250,200,255,0.8)]`}
+                >
+                    <h3 className="text-2xl font-bold text-yellow-400 mb-3 flex items-center uppercase border-b-2 pb-2 ${target.border}">
+                        <span className="text-3xl mr-2">{target.icon}</span> {target.name}
+                    </h3>
+                    <div className="flex flex-wrap pt-2 min-h-[150px]">
+                        {itemsInTarget.map(item => (
+                            <div
+                                key={item.id}
+                                className={`p-2 m-1 text-xs rounded-full shadow-sm font-medium uppercase
+                                            ${item.correct 
+                                                ? 'bg-green-600 text-white' 
+                                                : 'bg-red-600 text-white'}`}
+                            >
+                                {item.text}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        // Render the game
+        ReactDOM.render(<PrivateInfoSorter />, document.getElementById('root'));
+    </script>
+</body>
+</html>

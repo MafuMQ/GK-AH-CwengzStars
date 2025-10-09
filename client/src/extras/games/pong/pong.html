@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vanilla JavaScript Pong</title>
+    <link rel="stylesheet" href="css/pong.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>VANILLA JAVASCRIPT PONG</h1>
+        </div>
+        
+        <div class="score-board">
+            <div>PLAYER: <span id="player-score">0</span></div>
+            <div>COMPUTER: <span id="computer-score">0</span></div>
+        </div>
+        
+        <div style="position: relative; width: 100%;">
+            <div class="center-line"></div>
+            <canvas id="game-canvas" width="800" height="500"></canvas>
+        </div>
+        
+        <!-- CLEARLY VISIBLE DIFFICULTY CONTROLS -->
+        <div class="difficulty-section">
+            <div class="difficulty-label">COMPUTER DIFFICULTY</div>
+            <div class="difficulty-controls">
+                <button class="difficulty-btn" data-level="1">Easy</button>
+                <button class="difficulty-btn active" data-level="2">Medium</button>
+                <button class="difficulty-btn" data-level="3">Hard</button>
+                <button class="difficulty-btn" data-level="4">Expert</button>
+            </div>
+            <div class="instructions">
+                <p>Use <span class="highlight">UP</span> and <span class="highlight">DOWN</span> arrow keys to move your paddle</p>
+                <p>First to <span class="highlight">5</span> points wins!</p>
+            </div>
+        </div>
+        
+        <div class="game-over" id="game-over">
+            <div id="result-message"></div>
+            <button class="restart-btn" id="restart-btn">PLAY AGAIN</button>
+        </div>
+
+        <!-- Quiz Modal -->
+        <div class="quiz-modal" id="quiz-modal">
+            <div class="quiz-content">
+                <div id="quiz-question"></div>
+                <input type="text" id="quiz-answer" placeholder="Your answer..." autocomplete="off" />
+                <button id="quiz-submit">Submit</button>
+                <div id="quiz-feedback"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/pong.js"></script>
+</body>
+</html>

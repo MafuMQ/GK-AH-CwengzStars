@@ -180,6 +180,12 @@ const GamesPage = () => {
   const [showCyberHeroRPG, setShowCyberHeroRPG] = useState(false);
   const [showDataFortressBuilder, setShowDataFortressBuilder] = useState(false);
   const [showCyberRunnerGame, setShowCyberRunnerGame] = useState(false);
+    // Placeholder states for new games (to be implemented later)
+    // const [showMiniGames, setShowMiniGames] = useState(false);
+    // const [showCyberSort, setShowCyberSort] = useState(false);
+    // const [showMinesweeper, setShowMinesweeper] = useState(false);
+    // const [showPong, setShowPong] = useState(false);
+    // const [showSpaceInvader, setShowSpaceInvader] = useState(false);
 
   return (
     <>
@@ -243,6 +249,51 @@ const GamesPage = () => {
               </div>
               <h3 className="text-2xl font-bold text-indigo-700 mb-2">Cyber Runner</h3>
               <p className="text-gray-700 mb-4">Run, jump, and dash to deliver messages safely through digital threats!</p>
+              <Button className="bg-indigo-600 text-white font-bold px-6 py-2 rounded-full">Play Game</Button>
+            </div>
+            {/* Mini Games Card */}
+            <div className="bg-gradient-to-br from-orange-200 via-yellow-100 to-pink-100 rounded-3xl shadow-lg p-8 text-center cursor-pointer hover:scale-105 transition-transform" onClick={() => window.open('/src/extras/game-portal/index.html', '_blank')}>
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                <Grid3X3 className="w-8 h-8 text-orange-500" />
+              </div>
+              <h3 className="text-2xl font-bold text-orange-700 mb-2">Mini Games</h3>
+              <p className="text-gray-700 mb-4">Choose from an assortment of quick, fun cyber challenges!</p>
+              <Button className="bg-orange-500 text-white font-bold px-6 py-2 rounded-full">Play Game</Button>
+            </div>
+            {/* Cyber Sort Card */}
+            <div className="bg-gradient-to-br from-teal-200 via-blue-100 to-green-100 rounded-3xl shadow-lg p-8 text-center cursor-pointer hover:scale-105 transition-transform" onClick={() => window.open('/src/extras/game-portal/game1.html', '_blank')}>
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                <Shield className="w-8 h-8 text-teal-600" />
+              </div>
+              <h3 className="text-2xl font-bold text-teal-700 mb-2">Cyber Sort</h3>
+              <p className="text-gray-700 mb-4">Sort cyber items into private and public spaces to stay safe!</p>
+              <Button className="bg-teal-600 text-white font-bold px-6 py-2 rounded-full">Play Game</Button>
+            </div>
+            {/* Minesweeper Card */}
+            <div className="bg-gradient-to-br from-gray-200 via-blue-100 to-yellow-100 rounded-3xl shadow-lg p-8 text-center cursor-pointer hover:scale-105 transition-transform" onClick={() => window.open('/src/extras/games/minesweeper/ms.html', '_blank')}>
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                <Grid3X3 className="w-8 h-8 text-gray-600" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-700 mb-2">Minesweeper</h3>
+              <p className="text-gray-700 mb-4">Clear the field and avoid digital hazards in this classic challenge!</p>
+              <Button className="bg-gray-600 text-white font-bold px-6 py-2 rounded-full">Play Game</Button>
+            </div>
+            {/* Pong Card */}
+            <div className="bg-gradient-to-br from-blue-200 via-purple-100 to-pink-100 rounded-3xl shadow-lg p-8 text-center cursor-pointer hover:scale-105 transition-transform" onClick={() => window.open('/src/extras/games/pong/pong.html', '_blank')}>
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                <Zap className="w-8 h-8 text-blue-600" />
+              </div>
+              <h3 className="text-2xl font-bold text-blue-700 mb-2">Pong</h3>
+              <p className="text-gray-700 mb-4">Score points and earn power-ups by answering cyber safety quizzes!</p>
+              <Button className="bg-blue-600 text-white font-bold px-6 py-2 rounded-full">Play Game</Button>
+            </div>
+            {/* Space Invader Card */}
+            <div className="bg-gradient-to-br from-indigo-200 via-blue-100 to-green-100 rounded-3xl shadow-lg p-8 text-center cursor-pointer hover:scale-105 transition-transform" onClick={() => window.open('/src/extras/games/space invader/si.html', '_blank')}>
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                <Sword className="w-8 h-8 text-indigo-600" />
+              </div>
+              <h3 className="text-2xl font-bold text-indigo-700 mb-2">Space Invader</h3>
+              <p className="text-gray-700 mb-4">Defend against alien threats and boost your shields with cyber quizzes!</p>
               <Button className="bg-indigo-600 text-white font-bold px-6 py-2 rounded-full">Play Game</Button>
             </div>
           </div>

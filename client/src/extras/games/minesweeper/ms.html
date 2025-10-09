@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vanilla JavaScript Minesweeper</title>
+    <link rel="stylesheet" href="css/ms.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <div class="mines-counter">💣 15</div>
+            <button class="restart-btn">😊</button>
+            <div class="timer">⏱️ 0</div>
+        </div>
+        
+        <div class="game-board"></div>
+        
+        <div class="game-message win">You Win! 🎉</div>
+        <div class="game-message lose">Game Over! 💣</div>
+        
+        <div class="difficulty">
+            <button class="difficulty-btn active" data-mines="15" data-size="10">Beginner</button>
+            <button class="difficulty-btn" data-mines="40" data-size="16">Intermediate</button>
+            <button class="difficulty-btn" data-mines="99" data-size="22">Expert</button>
+        </div>
+        
+        <div class="instructions">
+            <h3>How to Play</h3>
+            <p>• Left-click to reveal a cell<br>
+            • Right-click to place/remove a flag<br>
+            • Reveal all non-mine cells to win<br>
+            • Avoid clicking on mines!</p>
+        </div>
+    </div>
+
+    <script src="js/ms.js"></script>
+</body>
+</html>
