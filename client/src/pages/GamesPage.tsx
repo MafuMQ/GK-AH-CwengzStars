@@ -252,7 +252,7 @@ const GamesPage = () => {
               <Button className="bg-indigo-600 text-white font-bold px-6 py-2 rounded-full">Play Game</Button>
             </div>
             {/* Mini Games Card */}
-            <div className="bg-gradient-to-br from-orange-200 via-yellow-100 to-pink-100 rounded-3xl shadow-lg p-8 text-center cursor-pointer hover:scale-105 transition-transform" onClick={() => window.open('/src/extras/game-portal/index.html', '_blank')}>
+            <div className="bg-gradient-to-br from-orange-200 via-yellow-100 to-pink-100 rounded-3xl shadow-lg p-8 text-center cursor-pointer hover:scale-105 transition-transform" onClick={() => window.open('/extras/game-portal/index.html', '_blank')}>
               <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
                 <Grid3X3 className="w-8 h-8 text-orange-500" />
               </div>
@@ -261,7 +261,7 @@ const GamesPage = () => {
               <Button className="bg-orange-500 text-white font-bold px-6 py-2 rounded-full">Play Game</Button>
             </div>
             {/* Cyber Sort Card */}
-            <div className="bg-gradient-to-br from-teal-200 via-blue-100 to-green-100 rounded-3xl shadow-lg p-8 text-center cursor-pointer hover:scale-105 transition-transform" onClick={() => window.open('/src/extras/game-portal/game1.html', '_blank')}>
+            <div className="bg-gradient-to-br from-teal-200 via-blue-100 to-green-100 rounded-3xl shadow-lg p-8 text-center cursor-pointer hover:scale-105 transition-transform" onClick={() => window.open('/extras/game-portal/game1.html', '_blank')}>
               <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
                 <Shield className="w-8 h-8 text-teal-600" />
               </div>
@@ -270,7 +270,7 @@ const GamesPage = () => {
               <Button className="bg-teal-600 text-white font-bold px-6 py-2 rounded-full">Play Game</Button>
             </div>
             {/* Minesweeper Card */}
-            <div className="bg-gradient-to-br from-gray-200 via-blue-100 to-yellow-100 rounded-3xl shadow-lg p-8 text-center cursor-pointer hover:scale-105 transition-transform" onClick={() => window.open('/src/extras/games/minesweeper/ms.html', '_blank')}>
+            <div className="bg-gradient-to-br from-gray-200 via-blue-100 to-yellow-100 rounded-3xl shadow-lg p-8 text-center cursor-pointer hover:scale-105 transition-transform" onClick={() => window.open('/extras/games/minesweeper/ms.html', '_blank')}>
               <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
                 <Grid3X3 className="w-8 h-8 text-gray-600" />
               </div>
@@ -279,7 +279,7 @@ const GamesPage = () => {
               <Button className="bg-gray-600 text-white font-bold px-6 py-2 rounded-full">Play Game</Button>
             </div>
             {/* Pong Card */}
-            <div className="bg-gradient-to-br from-blue-200 via-purple-100 to-pink-100 rounded-3xl shadow-lg p-8 text-center cursor-pointer hover:scale-105 transition-transform" onClick={() => window.open('/src/extras/games/pong/pong.html', '_blank')}>
+            <div className="bg-gradient-to-br from-blue-200 via-purple-100 to-pink-100 rounded-3xl shadow-lg p-8 text-center cursor-pointer hover:scale-105 transition-transform" onClick={() => window.open('/extras/games/pong/pong.html', '_blank')}>
               <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
                 <Zap className="w-8 h-8 text-blue-600" />
               </div>
@@ -288,7 +288,7 @@ const GamesPage = () => {
               <Button className="bg-blue-600 text-white font-bold px-6 py-2 rounded-full">Play Game</Button>
             </div>
             {/* Space Invader Card */}
-            <div className="bg-gradient-to-br from-indigo-200 via-blue-100 to-green-100 rounded-3xl shadow-lg p-8 text-center cursor-pointer hover:scale-105 transition-transform" onClick={() => window.open('/src/extras/games/space invader/si.html', '_blank')}>
+            <div className="bg-gradient-to-br from-indigo-200 via-blue-100 to-green-100 rounded-3xl shadow-lg p-8 text-center cursor-pointer hover:scale-105 transition-transform" onClick={() => window.open('/extras/games/space invader/si.html', '_blank')}>
               <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
                 <Sword className="w-8 h-8 text-indigo-600" />
               </div>
