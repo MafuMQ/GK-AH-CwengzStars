@@ -9,7 +9,6 @@ vite.config.ts.*
 *.log.*
 *.swp
 .env
-firebase.ts
 # Ignore build artifacts
 # Ignore node modules
 # Ignore macOS system files
